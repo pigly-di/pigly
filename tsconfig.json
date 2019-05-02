@@ -1,0 +1,11 @@
+/* tsconfig.json */
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    /* other options */
+    "baseUrl": "./packages",
+    "paths": {
+      "@robgeoltd/*": ["./*/src"]
+    }
+  }
+}

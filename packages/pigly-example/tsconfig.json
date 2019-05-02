@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",  
+    "lib": [
+      "es2015",
+      "dom",
+    ],
+    "plugins": [
+      { "transform": "transformer-module" },
+    ]
+  },
+
+  "exclude": [
+    "node_modules",
+  ],
+}

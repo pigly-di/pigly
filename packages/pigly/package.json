@@ -1,0 +1,14 @@
+{
+  "name": "pigly",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "devDependencies": {
+    "typescript": "^3.4.5"
+  },
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  },
+  "dependencies": {
+  }
+}
