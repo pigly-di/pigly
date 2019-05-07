@@ -22,7 +22,7 @@
     "webpack-cli": "^3.3.1"
   },
   "dependencies": {
-    "@pigly/transformer": "^0.0.1",
+    "@pigly/transformer": "^0.0.1",    
     "pigly": "^0.0.1"
   }
 }

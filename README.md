@@ -1,27 +1,7 @@
 # Pigly 
-typescript compile-type Dependency-Resolution and run-time Dependency-Injection. 
+unobtrusive, manually configured, dependency-injection. 
 
 ## Goal
 
-to turn this... 
-
-```ts
-let kernel = new Kernel();
-
-kernel.bind<IFoo>().to<Foo>();
-kernel.bind<IBar>().to<Bar>().whenInjectedInto<Foo>();
-
-let foo = kernel.resolve<IFoo>()
-```
-
-into this... 
-
-```ts
-let kernel = new Kernel();
-
-kernel.bind(Symbol.for("IFoo")).to(Symbol.for("Foo"), { ctor: Foo, args: { "bar": Symbol.for("IBar") } })
-kernel.bind(Symbol.for("IBar")).to(Symbol.for("Bar"), { ctor: Bar }).whenInjectedInto(Symbol.for("Foo"));
-
-let foo = kernel.resolve(Symbol.for("IFoo"))
-
-```
+Currently under-development as a proof of concept. main goal is to eventually use a typescript transformer to 
+remove the manual element of the kernel configuration. 

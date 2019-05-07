@@ -2,15 +2,11 @@
   "compilerOptions": {
     "target": "es2015",
     "module": "commonjs",
-    "moduleResolution": "node",  
+    "moduleResolution": "node",
     "lib": [
       "es2015",
       "dom",
     ],
-    "declaration": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "src/",
     "types": [
       "mocha",
       "chai"

@@ -9,11 +9,11 @@
 			"path": "packages\\pigly"
 		},
 		{
-			"name": "@pigly/transformer",
+			"name": "@pigly/example",
 			"path": "packages\\pigly-example"
 		},
 		{
-			"name": "@pigly/example",
+			"name": "@pigly/transformer",
 			"path": "packages\\pigly-transformer"
 		}
 	],

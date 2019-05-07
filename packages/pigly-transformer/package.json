@@ -1,6 +1,7 @@
 {
   "name": "@pigly/transformer",
   "version": "0.0.1",
+  "private": true,
   "main": "dist/transformer.js",
   "typings": "dist/transformer.d.ts",
   "devDependencies": {
@@ -18,7 +19,7 @@
     "webpack-cli": "^3.3.1"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.build.json"
+    "build": "tsc --build tsconfig.json"
   },
   "dependencies": {
     "nodemon-webpack-plugin": "^4.0.8",

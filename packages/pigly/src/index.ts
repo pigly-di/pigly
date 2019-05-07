@@ -1,2 +1,1 @@
-export * from './_declare';
-export * from './_resolve';
+export * from './kernel';
