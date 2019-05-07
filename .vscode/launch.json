@@ -8,12 +8,11 @@
       "program": "${workspaceFolder}/node_modules/webpack/bin/webpack.js",
       "args": [
         "--config",
-        "${workspaceFolder}/packages/example/webpack.config.js"
+        "${workspaceFolder}/packages/pigly-example/webpack.config.js"
       ],
-      "cwd": "${workspaceFolder}/packages/example",
+      "cwd": "${workspaceFolder}/packages/pigly-example",
       "outFiles": [
-        "${workspaceFolder}/node_modules/pigly/**/*.js",
-        "${workspaceFolder}/packages/pigly/**/*.js"
+        "${workspaceFolder}/**/*.js"
       ],
       "sourceMaps": true
     }

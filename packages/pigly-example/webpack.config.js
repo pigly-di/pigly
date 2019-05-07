@@ -1,4 +1,4 @@
-const { transformer } = require('pigly')
+const { transformer } = require('@pigly/transformer')
 const nodeExternals = require('webpack-node-externals');
 const NodemonPlugin = require('nodemon-webpack-plugin');
 const path = require('path');

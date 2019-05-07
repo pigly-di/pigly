@@ -1,18 +1,28 @@
 {
   "name": "pigly-example",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev:build": "webpack --config webpack.config.js",
-    "dev": "webpack --config webpack.config.js --watch"
+    "dev": "webpack --config webpack.config.js --watch",
+    "test": "cross-env TS_NODE_COMPILER=\"ttypescript\" "
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.6",
     "awesome-typescript-loader": "^5.2.1",
+    "chai": "^4.2.0",
+    "cross-env": "^5.2.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.0",
+    "source-map-support": "^0.5.12",
+    "ttypescript": "^1.5.6",
     "typescript": "^3.4.5",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1"
   },
   "dependencies": {
-    "pigly": "^0.1.0"
+    "@pigly/transformer": "^0.0.1",
+    "pigly": "^0.0.1"
   }
 }

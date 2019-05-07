@@ -1,0 +1,21 @@
+{
+	"folders": [
+		{
+			"name": "root",
+			"path": "."
+		},
+		{
+			"name": "pigly",
+			"path": "packages\\pigly"
+		},
+		{
+			"name": "transformer",
+			"path": "packages\\pigly-example"
+		},
+		{
+			"name": "example",
+			"path": "packages\\pigly-transformer"
+		}
+	],
+	"settings": {}
+}

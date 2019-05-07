@@ -93,6 +93,12 @@
 /*! no static exports found */
 /***/ (function(module, exports) {
 
+let kernel = {};
+class Foo {
+    constructor(bar) { }
+}
+class Bar {
+}
 
 
 /***/ })

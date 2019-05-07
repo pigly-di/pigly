@@ -3,7 +3,7 @@ import { IResolution } from "./_resolve";
 
 export interface IKernel {
   bind<T>(key: symbol): IKernelFluentBind<T>
-  get<T>(key: symbol): T;
+  resolve<T>(key: symbol): T;
 }
 
 export interface IKernelFluentBind<T> {
