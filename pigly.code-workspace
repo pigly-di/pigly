@@ -1,7 +1,7 @@
 {
 	"folders": [
 		{
-			"name": "root",
+			"name": "[root]",
 			"path": "."
 		},
 		{
@@ -9,11 +9,11 @@
 			"path": "packages\\pigly"
 		},
 		{
-			"name": "transformer",
+			"name": "@pigly/transformer",
 			"path": "packages\\pigly-example"
 		},
 		{
-			"name": "example",
+			"name": "@pigly/example",
 			"path": "packages\\pigly-transformer"
 		}
 	],

@@ -1,28 +1,27 @@
 import { IKernel, IKernelFluentBind } from "./_kernel";
 import { IResolution } from "./_resolve";
+import { IBinding } from './_binding';
 
-export class Kernel implements IKernel {
-  private _registry = new Map<symbol, Array<IResolution<any>>>();
+export class Kernel {
+  private _bindings = new Map<symbol, Array<IBinding>>();
 
-  bind<T>(): IKernelFluentBind<T>    
-  bind<T>(symbol: symbol): IKernelFluentBind<T>
-  bind<T>(symbol?: symbol): IKernelFluentBind<T> {
-    if (symbol === undefined) throw Error("must pass symbol to bind method");
+  add(binding: IBinding){
+    let service = binding.service;
 
-    let resolved: IResolution<any> = {}
-    let resolutions: Array<IResolution<any>> = [];
-
-    if (this._registry.has(symbol) === false) {
-      this._registry.set(symbol, resolutions);
-    } else {
-      resolutions = this._registry.get(symbol);
+    let serviceBindings = []
+    if(this._bindings.has(service)){
+      serviceBindings = this._bindings.get(service); 
+    }else{
+      this._bindings.set(service, serviceBindings);
     }
-
-    return undefined;
+    serviceBindings.push(binding);
   }
 
-  resolve<T>(): T;
-  resolve(key: symbol): any;
-  resolve(key?: symbol): any {
+  get(service: symbol){
+    return this.getAll    
+  }
+
+  private resolve(ctx){
+
   }
 }
