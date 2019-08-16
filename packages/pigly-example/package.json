@@ -1,6 +1,6 @@
 {
   "name": "pigly-example",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev:build": "webpack --config webpack.config.js",
@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "@pigly/transformer": "^0.1.0",
-    "pigly": "^0.1.0"
+    "pigly": "^0.1.1"
   }
 }
