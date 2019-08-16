@@ -1,6 +1,6 @@
 {
   "name": "pigly",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/",
   "typings": "dist/esm/index.d.ts",
@@ -16,7 +16,7 @@
     "typescript": "^3.4.5"
   },
   "scripts": {
-    "build" : "npm run build:esm && npm run build:cjs",
+    "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc --build tsconfig.build.esm.json",
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
     "test": "nyc mocha test/**/*.spec.ts"
@@ -40,7 +40,7 @@
     ],
     "sourceMap": true,
     "instrument": true
-  }, 
+  },
   "files": [
     "/dist/*",
     "README.md"

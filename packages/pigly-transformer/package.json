@@ -1,6 +1,6 @@
 {
   "name": "@pigly/transformer",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "main": "dist/transformer.js",
   "typings": "dist/transformer.d.ts",
