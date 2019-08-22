@@ -1,9 +1,18 @@
 {
   "name": "@pigly/transformer",
   "version": "0.1.0",
-  "private": true,
-  "main": "dist/transformer.js",
+  "private": false,
+  "main": "dist/index.js",
   "typings": "dist/transformer.d.ts",
+  "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/pigly-di/pigly.git"
+  },
+  "author": {
+    "name" : "Meirion Hughes",
+    "url" : "https://github.com/MeirionHughes"
+  },
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.6",
@@ -19,10 +28,15 @@
     "webpack-cli": "^3.3.1"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json",
+    "test": "ts-node --compiler ttypescript example.ts"
   },
   "dependencies": {
     "nodemon-webpack-plugin": "^4.0.8",
     "webpack-node-externals": "^1.7.2"
-  }
+  },
+  "files": [
+    "/dist/*",
+    "README.md"
+  ]
 }

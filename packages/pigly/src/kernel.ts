@@ -1,10 +1,11 @@
-interface SymbolFor<T> { }
+export declare function SymbolFor<T>(): symbol;
 
 export interface IResolverRoot {
   resolve<T>(service: symbol): T[];
 }
 
 export interface IContext extends IResolverRoot {
+  kernel: IReadOnlyKernel;
   target: symbol;
   parent?: IContext;
 }
@@ -17,12 +18,27 @@ export interface IProvider<T> {
   (ctx: IContext): T;
 }
 
-export class Kernel implements IResolverRoot {
+export interface IReadOnlyKernel extends IResolverRoot {
+  get<T>(service: symbol): T;
+
+}
+
+export interface IKernel extends IReadOnlyKernel {
+  bind<T>(service: symbol, provider: IProvider<T>): void;
+  bind<T>(provider: IProvider<T>): void;
+}
+
+export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>()
 
-  bind<T>(service: symbol, provider: IProvider<T>) {
-    let bindings: IBinding[] = [];
+  bind<T>(service: symbol, provider: IProvider<T>): void;
+  bind<T>(provider: IProvider<T>): void;
+  bind<T>(service: any, provider?: IProvider<T>) {
+    if (isSymbol(service) === false) {
+      throw Error("first argument must be a symbol.");
+    }
 
+    let bindings: IBinding[] = [];
     if (this._bindings.has(service)) {
       bindings = this._bindings.get(service);
     }
@@ -45,6 +61,7 @@ export class Kernel implements IResolverRoot {
 
     for (let binding of bindings) {
       let ctx: IContext = {
+        kernel: this,
         target,
         parent,
         resolve: (service: symbol) => this.resolve(service, ctx)
@@ -73,7 +90,6 @@ export function toValue<T>(value: T): IProvider<T> {
   return (_) => value;
 }
 
-
 export interface Newable0<T> {
   new(): T;
 }
@@ -87,10 +103,10 @@ export interface Newable3<T, P1, P2, P3> {
   new(p1: P1, p2: P2, p3: P3): T;
 }
 
-export function toClass<T>(ctor: Newable0<T>)
-export function toClass<T, P1>(ctor: Newable1<T, P1>, p1: IProvider<P1>)
-export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>, p2: IProvider<P2>)
-export function toClass<T, P1, P2, P3>(ctor: Newable3<T, P1, P2, P3>, p1: IProvider<P1>, p2: IProvider<P2>, p3: IProvider<P2>)
+export function toClass<T>(ctor: Newable0<T>): IProvider<T>
+export function toClass<T, P1>(ctor: Newable1<T, P1>, p1: IProvider<P1>): IProvider<T>
+export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>, p2: IProvider<P2>): IProvider<T>
+export function toClass<T, P1, P2, P3>(ctor: Newable3<T, P1, P2, P3>, p1: IProvider<P1>, p2: IProvider<P2>, p3: IProvider<P2>): IProvider<T>
 export function toClass(ctor: any, ...providers: IProvider<any>[]) {
   return (ctx: IContext) => {
     return new ctor(...providers.map(provider => provider(ctx)));
@@ -116,4 +132,34 @@ export function when<T>(predicate: (ctx: IContext) => boolean, provider: IProvid
   return (ctx: IContext) => {
     if (predicate(ctx)) return provider(ctx);
   };
+}
+
+/** 
+ * 
+ * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
+export function defer<T>(provider: IProvider<T>, inject: { [field: string]: symbol }) {
+  return (ctx: IContext) => {
+    let kernel = ctx.kernel;
+    let resolved = provider(ctx);
+    setImmediate(() => {
+      for (let [key, target] of entries(inject)) {
+        resolved[key] = kernel.get(target);
+      }
+    })
+    return resolved;
+  };
+}
+
+function entries(obj: { [field: string]: symbol }): Array<[string, symbol]> {
+  var ownProps = Object.keys(obj),
+    i = ownProps.length,
+    resArray = new Array(i); // preallocate the Array
+  while (i--)
+    resArray[i] = [ownProps[i], obj[ownProps[i]]];
+
+  return resArray;
+};
+
+function isSymbol(obj): obj is symbol {
+  return typeof obj === "symbol";
 }

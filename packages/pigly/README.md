@@ -7,11 +7,9 @@ unobtrusive, manually configured, dependency-injection for javascript/typescript
 
 > don't pollute the code with DI concerns 
 
-pigly is a simple helper to manually configure a DI container to bind symbols to providers. It explicitly avoids decorators, or any other changes to existing code, and on its own doesn't require any other dependency / compilation step to work. 
+pigly is a simple helper to manually configure a DI container to bind symbols to providers. It explicitly avoids decorators, or any other changes to existing code, and on its own doesn't require any other dependency / compilation step to work. However, there is a typescript transformer `@pigly/transformer` that helps with emitting symbols for you. 
 
-The ultimate goal is to create a typescript transformer that can help with the generation of (consistent) Symbols so that we can avoid having to manage them manually. 
-
-## Usage
+## Native Usage (without transformers)
 
 create a kernel, create bindings then get the resolved result via its symbol. 
 
@@ -130,3 +128,4 @@ MIT
 
 "pig" licensed under CC from Noun Project, Created by habione 404, FR 
 
+@pigly/transformer was derived from https://github.com/YePpHa/ts-di-transformer  (MIT)

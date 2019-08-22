@@ -8,9 +8,14 @@
       "dom",
     ],
     "declaration": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "./dist",
-    "rootDir": "src/"
+    "rootDir": "src/",
+    "plugins": [
+      {
+        "transform": "./src/index.ts"
+      },
+    ]
   },
   "include": [
     "src/"
