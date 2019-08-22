@@ -17,10 +17,20 @@ export interface IProvider<T> {
   (ctx: IContext): T;
 }
 
+export interface IKernel extends IResolverRoot{
+  
+}
+
 export class Kernel implements IResolverRoot {
   private _bindings = new Map<symbol, IBinding[]>()
 
-  bind<T>(service: symbol, provider: IProvider<T>) {
+  /* REQUIRES TRANSFORMER - bind an interface to a provider */
+  bind<T>(provider: IProvider<T>)
+  /* bind a symbol identifier to a provider */
+  bind<T>(service: symbol, provider: IProvider<T>)
+  bind<T>(service: symbol | IProvider<T>, provider?: IProvider<T>) {
+    if(typeof service !== "symbol" ) throw Error('called "bind" without a service symbol');
+    
     let bindings: IBinding[] = [];
 
     if (this._bindings.has(service)) {
@@ -57,15 +67,30 @@ export class Kernel implements IResolverRoot {
     return results;
   }
 
-  get<T>(service: symbol): T {
+  /* REQUIRES TRANSFORMER - resolve an interface to a value */
+  get<T>(): T; 
+  /* resolve a unique symbol to a value */
+  get<T>(service: symbol): T
+  get<T>(service?: symbol): T {
+    if(typeof service !== "symbol" ) throw Error('called "get" without a service symbol');
     return this.resolve<T>(service)[0];
   }
 }
 
-export function to<T>(service: symbol): IProvider<T> {
+/* REQUIRES TRANSFORMER - create a provider that resolves to another type */
+export function to<T>(): IProvider<T>
+/* create a provider that resolves to another symbol */
+export function to<T>(service: symbol): IProvider<T>
+export function to<T>(service?: symbol): IProvider<T> {
+  if(typeof service !== "symbol" ) throw Error('called "to" without a service symbol');
   return (ctx) => ctx.resolve(service)[0] as T;
 }
-export function toAll<T>(service: symbol): IProvider<T[]> {
+/* REQUIRES TRANSFORMER - create a provider that resolves all bindings to a type */
+export function toAll<T>(): IProvider<T[]>
+/* create a provider that resolves all bindings to a symbol */
+export function toAll<T>(service: symbol): IProvider<T[]>
+export function toAll<T>(service?: symbol): IProvider<T[]> {
+  if(typeof service !== "symbol" ) throw Error('called "toAll" without a service symbol');
   return (ctx) => ctx.resolve(service) as T[];
 }
 
