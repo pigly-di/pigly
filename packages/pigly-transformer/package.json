@@ -1,28 +1,40 @@
 {
   "name": "@pigly/transformer",
   "version": "0.1.0",
-  "private": true,
-  "main": "dist/transformer.js",
+  "private": false,
+  "main": "dist/index.js",
   "typings": "dist/transformer.d.ts",
+  "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/pigly-di/pigly.git"
+  },
+  "author": {
+    "name" : "Meirion Hughes",
+    "url" : "https://github.com/MeirionHughes"
+  },
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.7",
     "chai": "^4.2.0",
-    "cross-env": "^5.2.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.0",
     "source-map-support": "^0.5.12",
     "ttypescript": "^1.5.6",
-    "typescript": "^3.4.5",
-    "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.1"
+    "typescript": "^3.4.5"
   },
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json",
+    "test": "ts-node --compiler ttypescript example.ts"
   },
-  "dependencies": {
-    "nodemon-webpack-plugin": "^4.0.8",
-    "webpack-node-externals": "^1.7.2"
-  }
+  "peerDependencies": {
+    "typescript": "latest"
+  },
+  "dependencies": {},
+  "files": [
+    "/dist/*",
+    "README.md"
+  ],
+  "keywords": ["dependency-injection", "depenceny", "injection", "DI", "container", "typescript", "plugin"]
 }

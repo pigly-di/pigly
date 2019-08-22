@@ -1,4 +1,4 @@
-import { Kernel, toConst, toClass, to, asSingleton, IContext, when } from "../src/kernel";
+import { Kernel, toConst, toClass, to, asSingleton, IContext, when, defer } from "../src/kernel";
 import { expect } from 'chai';
 
 
@@ -189,18 +189,18 @@ describe("Conditional", () => {
     const kernel = new Kernel();
 
     class Foo {
-      constructor(public arg1: string){}
+      constructor(public arg1: string) { }
     }
 
     const A = Symbol.for("A");
     const B = Symbol.for("B");
     const C = Symbol.for("C");
 
-    kernel.bind(A, toClass(Foo, to(C) ));
-    kernel.bind(B, toClass(Foo, to(C) ));
+    kernel.bind(A, toClass(Foo, to(C)));
+    kernel.bind(B, toClass(Foo, to(C)));
 
-    kernel.bind(C, when(x=>x.parent.target == A, toConst("a")));
-    kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
+    kernel.bind(C, when(x => x.parent.target == A, toConst("a")));
+    kernel.bind(C, when(x => x.parent.target == B, toConst("b")));
 
     let resultA = kernel.get<Foo>(A);
     let resultB = kernel.get<Foo>(B);
@@ -208,5 +208,37 @@ describe("Conditional", () => {
     expect(resultA.arg1).is.eq("a");
     expect(resultB.arg1).is.eq("b");
 
+  })
+})
+
+describe("Deferred Injection", () => {
+  it("can inject singleton cyclic-loop dependency", (done) => {
+    const kernel = new Kernel();
+
+    class Foo {
+      constructor(public bar: Bar) { }
+    }
+
+    class Bar {
+      foo: Foo;
+      constructor() { }
+    }
+
+    const $Foo = Symbol.for("Foo");
+    const $Bar = Symbol.for("Bar");
+
+    kernel.bind($Foo, asSingleton(toClass(Foo, to($Bar))));
+    kernel.bind($Bar, asSingleton(defer(toClass(Bar), { foo: $Foo })));
+
+    let foo = kernel.get<Foo>($Foo);
+    let bar = kernel.get<Bar>($Bar);
+
+    setImmediate(() => {
+      expect(foo.bar).is.instanceOf(Bar);
+      expect(bar.foo).is.instanceOf(Foo);
+      expect(foo.bar).is.equal(bar);
+      expect(bar.foo).is.equal(foo);
+      done();
+    });
   })
 })

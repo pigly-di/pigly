@@ -9,10 +9,6 @@
 			"path": "packages\\pigly"
 		},
 		{
-			"name": "@pigly/example",
-			"path": "packages\\pigly-example"
-		},
-		{
 			"name": "@pigly/transformer",
 			"path": "packages\\pigly-transformer"
 		}

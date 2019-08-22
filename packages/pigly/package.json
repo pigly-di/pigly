@@ -5,6 +5,14 @@
   "module": "dist/esm/",
   "typings": "dist/esm/index.d.ts",
   "license": "MIT",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/pigly-di/pigly.git"
+  },
+  "author": {
+    "name" : "Meirion Hughes",
+    "url" : "https://github.com/MeirionHughes"
+  },
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.7",
@@ -45,5 +53,6 @@
   "files": [
     "/dist/*",
     "README.md"
-  ]
+  ],
+  "keywords": ["dependency-injection", "depenceny", "injection", "DI", "container", "typescript", "plugin"]
 }

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2017",
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": [
@@ -9,7 +9,8 @@
     ],
     "types": [
       "mocha",
-      "chai"
+      "chai",
+      "node"
     ]
   },
   "exclude": [
