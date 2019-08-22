@@ -17,6 +17,7 @@
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.7",
     "chai": "^4.2.0",
+    "codecov": "^3.5.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.0",
     "source-map-support": "^0.5.12",
@@ -25,7 +26,8 @@
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "test": "ts-node --compiler ttypescript example.ts"
+    "test": "ts-node --compiler ttypescript example.ts",
+    "coverage": "codecov --flag pigly"
   },
   "peerDependencies": {
     "typescript": "latest"
