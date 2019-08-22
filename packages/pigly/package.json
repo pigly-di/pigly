@@ -30,7 +30,7 @@
     "build:esm": "tsc --build tsconfig.build.esm.json",
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
     "test": "nyc mocha test/**/*.spec.ts",
-    "coverage": "codecov --flag pigly"
+    "coverage": "codecov --flags pigly"
   },
   "nyc": {
     "exclude": [
