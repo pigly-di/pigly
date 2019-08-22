@@ -1,4 +1,6 @@
 # Pigly 
+![CircleCI](https://img.shields.io/circleci/build/github/pigly-di/pigly?token=abc123def456) ![npm](https://img.shields.io/npm/v/pigly) ![npm](https://img.shields.io/npm/dm/pigly) ![Codecov](https://img.shields.io/codecov/c/gh/pigly-di/pigly)
+
 unobtrusive, manually configured, dependency-injection for javascript/typescript
 
 ![alt](https://avatars0.githubusercontent.com/u/50213493?s=400&u=65942b405a979397a2c358366db85c3d06f521f5&v=4)
