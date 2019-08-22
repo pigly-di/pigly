@@ -1,0 +1,17 @@
+coverage:
+  status:
+    project:
+      default:
+        threshold: 0.10%
+      core:
+        flags: core
+      viewer:
+        flags: viewer
+    patch: off
+flags:
+  core:
+    paths:
+      - packages/pigly
+  viewer:
+    paths:
+      - packages/pigly-transformer
