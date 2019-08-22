@@ -20,7 +20,7 @@ let foo = kernel.get<IFoo>();
 
 Fair-warning: this should be considered experimental until version 1.0 - lock to minor versions in the meantime. 
 
-### Planned features
+## Planned features
 
 * Scoping
 * omitting explicit provider configuration for class-constructors
@@ -29,7 +29,7 @@ Fair-warning: this should be considered experimental until version 1.0 - lock to
 
 native usage relates to using this package directly without any typescript transformer. 
 
-Its pretty simple: create a kernel, create symbol->provider bindings, then get the resolved result with `get(symbol)` 
+Its pretty simple: create a kernel, create symbol-to-provider bindings, then get the resolved result with `get(symbol)` 
 
 ```
 import { Kernel } from 'pigly';
@@ -143,7 +143,14 @@ kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
 
 ## Transformer Usage
 
-with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/packages/pigly-transformer) you are able to omit manually creating a symbol. Currently `.bind<T>(provider)` `.get<T>()` as well as the provider functions `to<T>()` and `toAll<T>()` are supported. At present the type `T` _must_ be an interface type. 
+with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/packages/pigly-transformer) you are able to omit manually creating a symbol. Currently 
+
+* `.bind<T>(provider)` 
+* `.get<T>()`
+* `to<T>()` 
+* `toAll<T>()` 
+
+are supported. At present the type `T` _must_ be an interface type. 
 
 ### Example
 
@@ -158,7 +165,7 @@ let foo = kernel.get<IFoo>();
 
 ## SymbolFor<T>()
 
-calls to SymbolFor<T>() get replaced with `symbol.for("<name of T>-<T signature hash>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e. : 
+calls to SymbolFor<T>() get replaced with `symbol.for("<name of T>-<T signature hash>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
 
 ```
 let kernel = new Kernel();
@@ -172,7 +179,7 @@ kernel.bind<IBar>($IBar, toClass(Bar));
 let foo = kernel.get<IFoo>($IFoo);
 ```
 
-the current approach (in the transformer), to make the type's symbol, is to combine the declared type's name ("IFoo") with a sha256-hash (as a hex string) of a simplified "signature" of the type's property-names. basically this looks like: 
+The current approach in the transformer, to make the type's symbol, is to combine the declared type's name ("IFoo") with a sha256-hash (as a hex string) of the type's property names. Basically this looks like: 
 
 ``` 
 ...
@@ -188,7 +195,7 @@ function hash(str: string): string
 }
 ```
 
-The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independenly-compiled libraries. Its possible that the way this hash is generated will change in future versions, if any issues arrise. 
+The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independenly-compiled libraries. 
 
 ## License
 MIT

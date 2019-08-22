@@ -36,9 +36,10 @@
   ],
   "keywords": [
     "dependency-injection",
-    "depenceny",
+    "dependency",
     "injection",
     "DI",
+    "IOC",    
     "container",
     "typescript",
     "plugin"
