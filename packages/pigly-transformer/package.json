@@ -1,7 +1,6 @@
 {
   "name": "@pigly/transformer",
-  "version": "0.2.0",
-  "private": false,
+  "version": "0.2.0", 
   "main": "dist/index.js",
   "typings": "dist/transformer.d.ts",
   "license": "MIT",
@@ -43,5 +42,6 @@
     "container",
     "typescript",
     "plugin"
-  ]
+  ],
+  "gitHead": "e2d738ed0497a0e92c74cb5b609b08c187f2b6be"
 }
