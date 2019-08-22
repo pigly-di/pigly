@@ -1,17 +1,17 @@
 {
   "name": "@pigly/transformer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "main": "dist/index.js",
   "typings": "dist/transformer.d.ts",
   "license": "MIT",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/pigly-di/pigly.git"
+    "type": "git",
+    "url": "https://github.com/pigly-di/pigly.git"
   },
   "author": {
-    "name" : "Meirion Hughes",
-    "url" : "https://github.com/MeirionHughes"
+    "name": "Meirion Hughes",
+    "url": "https://github.com/MeirionHughes"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -31,10 +31,17 @@
   "peerDependencies": {
     "typescript": "latest"
   },
-  "dependencies": {},
   "files": [
     "/dist/*",
     "README.md"
   ],
-  "keywords": ["dependency-injection", "depenceny", "injection", "DI", "container", "typescript", "plugin"]
+  "keywords": [
+    "dependency-injection",
+    "depenceny",
+    "injection",
+    "DI",
+    "container",
+    "typescript",
+    "plugin"
+  ]
 }
