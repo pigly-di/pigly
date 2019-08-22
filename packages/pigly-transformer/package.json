@@ -26,8 +26,7 @@
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "test": "ts-node --compiler ttypescript example.ts",
-    "coverage": "codecov --flags transformer"
+    "test": "ts-node --compiler ttypescript example.ts"
   },
   "peerDependencies": {
     "typescript": "latest"
