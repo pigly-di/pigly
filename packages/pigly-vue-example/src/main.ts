@@ -3,16 +3,17 @@ import App from './App.vue'
 
 Vue.config.productionTip = false
 
-import {Kernel, toClass, toConst} from 'pigly';
+
+import { Kernel, toClass, toConst } from 'pigly';
 
 let kernel = new Kernel();
 
-interface IFoo{
+interface IFoo {
   message: string;
 }
 
-class Foo implements IFoo{
-  constructor(public message: string){}
+class Foo implements IFoo {
+  constructor(public message: string) { }
 }
 
 kernel.bind<IFoo>(toClass(Foo, toConst("hello world")));

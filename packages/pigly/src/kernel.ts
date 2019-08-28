@@ -20,18 +20,21 @@ export interface IProvider<T> {
 
 export interface IReadOnlyKernel extends IResolverRoot {
   get<T>(service: symbol): T;
-
 }
 
 export interface IKernel extends IReadOnlyKernel {
+  /**Bind a Symbol to a provider */
   bind<T>(service: symbol, provider: IProvider<T>): void;
+  /**REQUIRES TRANSFORMER: Bind interface T to a provider */
   bind<T>(provider: IProvider<T>): void;
 }
 
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>()
 
+  /**Bind a Symbol to a provider */
   bind<T>(service: symbol, provider: IProvider<T>): void;
+  /**REQUIRES TRANSFORMER: Bind interface T to a provider */
   bind<T>(provider: IProvider<T>): void;
   bind<T>(service: any, provider?: IProvider<T>) {
     if (isSymbol(service) === false) {
@@ -46,7 +49,7 @@ export class Kernel implements IKernel {
 
     this._bindings.set(service, bindings);
   }
-
+  /** Resolve the target symbol bindings to providers, execute them and return the results */
   resolve<T>(target: symbol, parent?: IContext): T[] {
     let bindings = this._bindings.get(target);
     let results: any[] = [];
@@ -74,37 +77,36 @@ export class Kernel implements IKernel {
     return results;
   }
 
-  /* REQUIRES TRANSFORMER - resolve an interface to a value */
-  get<T>(): T; 
-  /* resolve a unique symbol to a value */
+  /** REQUIRES TRANSFORMER - resolve an interface to a value */
+  get<T>(): T;
+  /** resolve a symbol to a value */
   get<T>(service: symbol): T
   get<T>(service?: symbol): T {
-    if(typeof service !== "symbol" ) throw Error('called "get" without a service symbol');
+    if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
     return this.resolve<T>(service)[0];
   }
 }
 
-/* REQUIRES TRANSFORMER - create a provider that resolves to another type */
+/** REQUIRES TRANSFORMER - create a provider that resolves to another type */
 export function to<T>(): IProvider<T>
-/* create a provider that resolves to another symbol */
+/** create a provider that resolves to another symbol */
 export function to<T>(service: symbol): IProvider<T>
 export function to<T>(service?: symbol): IProvider<T> {
-  if(typeof service !== "symbol" ) throw Error('called "to" without a service symbol');
+  if (typeof service !== "symbol") throw Error('called "to" without a service symbol');
   return (ctx) => ctx.resolve(service)[0] as T;
 }
-/* REQUIRES TRANSFORMER - create a provider that resolves all bindings to a type */
+/** REQUIRES TRANSFORMER - create a provider that resolves all bindings to a type */
 export function toAll<T>(): IProvider<T[]>
-/* create a provider that resolves all bindings to a symbol */
+/** create a provider that resolves all bindings to a symbol */
 export function toAll<T>(service: symbol): IProvider<T[]>
 export function toAll<T>(service?: symbol): IProvider<T[]> {
-  if(typeof service !== "symbol" ) throw Error('called "toAll" without a service symbol');
+  if (typeof service !== "symbol") throw Error('called "toAll" without a service symbol');
   return (ctx) => ctx.resolve(service) as T[];
 }
 
 export function toValue<T>(value: T): IProvider<T> {
   return (_) => value;
 }
-
 export interface Newable0<T> {
   new(): T;
 }
@@ -118,11 +120,18 @@ export interface Newable3<T, P1, P2, P3> {
   new(p1: P1, p2: P2, p3: P3): T;
 }
 
+/** REQUIRES TRANSFORMER - create a class provider where the constructor arguments are exclusively interface types */
+export function toClass<T>(): IProvider<T>
+/** create a class provider with zero constructor arguments*/
 export function toClass<T>(ctor: Newable0<T>): IProvider<T>
+/** create a class provider with one constructor arguments*/
 export function toClass<T, P1>(ctor: Newable1<T, P1>, p1: IProvider<P1>): IProvider<T>
+/** create a class provider with two constructor arguments*/
 export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>, p2: IProvider<P2>): IProvider<T>
+/** create a class provider with three constructor arguments*/
 export function toClass<T, P1, P2, P3>(ctor: Newable3<T, P1, P2, P3>, p1: IProvider<P1>, p2: IProvider<P2>, p3: IProvider<P2>): IProvider<T>
-export function toClass(ctor: any, ...providers: IProvider<any>[]) {
+export function toClass(ctor?: any, ...providers: IProvider<any>[]) {
+  if(ctor === undefined) throw Error('called "toClass" without a Constructor argument');
   return (ctx: IContext) => {
     return new ctor(...providers.map(provider => provider(ctx)));
   }

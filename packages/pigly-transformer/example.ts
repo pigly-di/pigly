@@ -18,7 +18,7 @@ class Bar implements IBar {
 let kernel = new Kernel();
 
 kernel.bind<IFoo>(toClass(Foo, to<IBar>()));
-kernel.bind<IBar>(toClass(Bar));
+kernel.bind<IBar>(toClass<Bar>());
 
 let foo = kernel.get<IFoo>();
 

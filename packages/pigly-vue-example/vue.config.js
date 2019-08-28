@@ -15,7 +15,7 @@ module.exports = {
       .loader('ts-loader')
       .tap(options => {
         // modify the options...
-        return { ...options, getCustomTransformers: transformers };
+        return { ...options, getCustomTransformers: transformers, logLevel: "info" };
       })
   }
 }
