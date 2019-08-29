@@ -27,7 +27,7 @@ function visitNode(node: ts.Node, program: ts.Program) {
 
       if (!methodName) return node;
 
-      if(methodName == "SymbolFor"){
+      if (methodName == "SymbolFor") {
         if (!node.typeArguments) {
           throw new Error("No type arguments provided to `InterfaceSymbol<T>()`.");
         }
@@ -36,23 +36,23 @@ function visitNode(node: ts.Node, program: ts.Program) {
         return createSymbolFor(type, typeChecker);
       }
 
-      if (((methodName == "to" || methodName == "toAll") && typeArgs.length == 1 && methodArgs.length == 0)) {
+      if (((methodName == "to" || methodName == "toAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
 
-      if ((methodName == "toClass" && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
-        return createCtorCallWithInjectedProviders(node, typeChecker);
-      }
+      //if ((methodName == "toClass" && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
+      //  return createCtorCallWithInjectedProviders(node, typeChecker);
+      //}
     }
     else if (ts.isPropertyAccessExpression(node.expression)) {
       methodName = node.expression.name.escapedText.toString()
 
-      if ((methodName == "bind" && typeArgs.length == 1 && methodArgs.length == 1)) {
+      if ((methodName == "bind" && typeArgs && typeArgs.length == 1 && methodArgs.length == 1)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
-      if (((methodName == "get" || methodName == "getAll") && typeArgs.length == 1 && methodArgs.length == 0)) {
+      if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
         return createCallWithInjectedSymbol(node, typeChecker);
-      }   
+      }
     }
   }
 
@@ -74,7 +74,7 @@ function createSymbolFor(type: ts.Type, typeChecker: ts.TypeChecker) {
   return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(uid)]);
 }
 
-function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
+function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
   const typeArgument = node.typeArguments[0];
   const type = typeChecker.getTypeFromTypeNode(typeArgument);
   const injectNode = createSymbolFor(type, typeChecker);
@@ -84,6 +84,8 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
   for (let arg of node.arguments) {
     args.push(arg);
   }
+  args.push(...appendedParams);
+
   const nodeResult = ts.getMutableClone(node);
 
   nodeResult.arguments = ts.createNodeArray<ts.Expression>(args);
@@ -97,11 +99,55 @@ function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecke
   const typeArgument = node.typeArguments[0];
   const type = typeChecker.getTypeFromTypeNode(typeArgument);
 
-  console.log(type);  
+  if (type.isClass() && ts.isTypeReferenceNode(typeArgument) && ts.isIdentifier(typeArgument.typeName)) {
+    let ctors = getClassConstructSignatures(type, typeChecker);
+
+    let ctor = ctors[0];
+    let params = getConstructorParameters(ctor, typeChecker);
+
+    if (params.findIndex(x => x === null) != -1) {
+      throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
+    }
+
+    //super hacky...    
+    let providerCalls = params.map(param => {
+      return createSymbolFor(param, typeChecker)
+    })
+
+    const nodeResult = ts.getMutableClone(node);
+
+    console.log(typeArgument);
+
+    nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
+    nodeResult.arguments = ts.createNodeArray<ts.Expression>([
+      typeArgument.typeName, ...providerCalls
+    ]);
+    return nodeResult;
+  }
 
   return node;
 }
 
+function getClassConstructSignatures(type: ts.InterfaceType, typeChecker: ts.TypeChecker) {
+  let symbol = type.symbol;
+  let constructorType = typeChecker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration);
+  return constructorType.getConstructSignatures();
+}
+
+function getConstructorParameters(ctor: ts.Signature, typeChecker: ts.TypeChecker) {
+  let params: ts.Type[] = [];
+  for (let param of ctor.parameters) {
+    let paramDecl = param.declarations[0];
+    if (ts.isParameter(paramDecl) && ts.isTypeReferenceNode(paramDecl.type)) {
+      const symbol = typeChecker.getSymbolAtLocation(paramDecl.type.typeName);
+      const type = typeChecker.getDeclaredTypeOfSymbol(symbol);
+      params.push(type);
+    } else {
+      params.push(null);
+    }
+  }
+  return params;
+}
 
 export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
   return (context: ts.TransformationContext) => (file: ts.Node) => visitNodeAndChildren(file, program, context);
