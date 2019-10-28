@@ -152,6 +152,7 @@ with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/packa
 * `.get<T>()`
 * `to<T>()` 
 * `toAll<T>()` 
+* `Inject<T>()`
 
 are supported. At present the type `T` _must_ be an interface type. 
 
@@ -168,7 +169,7 @@ let foo = kernel.get<IFoo>();
 
 ## SymbolFor<T>()
 
-calls to SymbolFor<T>() get replaced with `symbol.for("<name of T>-<T signature hash>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
+calls to SymbolFor<T>() get replaced with `symbol.for("<name of T>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
 
 ```
 let kernel = new Kernel();
@@ -182,23 +183,7 @@ kernel.bind<IBar>($IBar, toClass(Bar));
 let foo = kernel.get<IFoo>($IFoo);
 ```
 
-The current approach in the transformer, to make the type's symbol, is to combine the declared type's name ("IFoo") with a sha256-hash (as a hex string) of the type's property names. Basically this looks like: 
-
-``` 
-...
-const props:any = decl.getProperties().map(x=>x.escapedName);  
-const sig = hash(JSON.stringify(props));
-const uid = decl.symbol.name + "_" + sig;
-...
-
-function hash(str: string): string
-  const h = crypto.createHash('sha256');
-  h.update(str);
-  return h.digest('hex');
-}
-```
-
-The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independenly-compiled libraries. 
+The current approach in the transformer, to make the type's symbol, is to use the imported name directly i.e. for SymbolFor<IFoo>() is converted to Symbol.for("IFoo"). The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independently-compiled libraries, or when using the transformer in a "transform only" build stage, as is typically the case with Webpack and Vue. The downside is that you must be consistent with type names, avoid renaming during imports and do not implement two or more interfaces with the exact same identifier-name. 
 
 ## License
 MIT

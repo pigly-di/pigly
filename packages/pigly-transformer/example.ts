@@ -1,25 +1,17 @@
 import { Kernel, SymbolFor, to, toClass, toConst } from 'pigly';
+import { IFoo, Foo, IBar, Bar } from './_foo';
 
-interface IFoo {
-  bar: IBar;
+function entry() {
+  let kernel = new Kernel();
+
+  kernel.bind<IFoo>(toClass(Foo, to<IBar>()));
+  kernel.bind<IBar>(toClass(Bar));
+
+  let foo = kernel.get<IFoo>();
+
+  console.log(foo);
+
+  
 }
+entry();
 
-interface IBar {}
-
-class Foo implements IFoo {
-  constructor(public bar: IBar) { }
-}
-
-class Bar implements IBar {
-  constructor(){
-  }
-}
-
-let kernel = new Kernel();
-
-kernel.bind<IFoo>(toClass(Foo, to<IBar>()));
-kernel.bind<IBar>(toClass(Bar));
-
-let foo = kernel.get<IFoo>();
-
-console.log(foo);
