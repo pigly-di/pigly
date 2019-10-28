@@ -1,14 +1,14 @@
 export interface IFoo {
-  bar: IBar;
+  bar: IBar<string>;
 }
 
-export interface IBar {}
+export interface IBar<T> {}
 
 export class Foo implements IFoo {
-  constructor(public bar: IBar) { }
+  constructor(public bar: IBar<string>) { }
 }
 
-export class Bar implements IBar {
-  constructor(){
+export class Bar<T> implements IBar<T> {
+  constructor(public value: T){
   }
 }

@@ -37,7 +37,7 @@ function visitNode(node: ts.Node, program: ts.Program) {
         }
         let arg = node.typeArguments[0];
 
-        if(ts.isIdentifier(arg)){
+        if(ts.isIdentifier(arg)){       
           return createSymbolFor(arg.escapedText.toString());
         }
       }
@@ -94,7 +94,8 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
   //console.log("Identifier", typeArgument);
 
   if (ts.isTypeReferenceNode(typeArgument)) {
-    const injectNode = createSymbolFor(typeArgument.typeName.getText());
+
+    const injectNode = createSymbolFor(typeArgument.getFullText());
     const args = [];
 
     args.push(injectNode);
