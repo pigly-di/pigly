@@ -9,7 +9,7 @@ function hash(str: string): string {
 }
 */
 
-import * as hash from 'object-hash';
+//import * as hash from 'object-hash';
 
 function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
   return ts.visitEachChild(visitNode(node, program), childNode => visitNodeAndChildren(childNode, program, context), context);

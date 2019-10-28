@@ -14,16 +14,11 @@ import { Inject } from "./decorators/inject";
 @Component({
   components: {
     HelloWorld
-  },
-  inject: ["$kernel"]
+  }
 })
 export default class App extends Vue {
   @Inject<IFoo>()
   private foo!: IFoo;
-
-  created() {}
-
-  mounted() {}
 }
 </script>
 
