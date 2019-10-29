@@ -182,6 +182,20 @@ describe("Providers", () => {
 
     expect(foo1, "results are same instance").is.equal(foo2);
   })
+
+  it("can resolve to all bindings", () => {
+    const kernel = new Kernel();
+
+    const $IFoo = Symbol.for("IFoo");
+
+    kernel.bind($IFoo, _=>1);
+    kernel.bind($IFoo, _=>2);
+    kernel.bind($IFoo, _=>3);
+
+    let foo = kernel.getAll<IFoo>($IFoo);
+
+    expect(foo, "result is array").is.eql([1,2,3])
+  })
 })
 
 describe("Conditional", () => {

@@ -85,6 +85,15 @@ export class Kernel implements IKernel {
     if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
     return this.resolve<T>(service)[0];
   }
+
+  /** REQUIRES TRANSFORMER - resolve an interface to a value array */
+  getAll<T>(): T[];
+  /** resolve a symbol to a value array*/
+  getAll<T>(service: symbol): T[]
+  getAll<T>(service?: symbol): T[] {
+    if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
+    return this.resolve<T>(service);
+  }
 }
 
 /** REQUIRES TRANSFORMER - create a provider that resolves to another type */
