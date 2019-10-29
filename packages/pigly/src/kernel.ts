@@ -19,7 +19,10 @@ export interface IProvider<T> {
 }
 
 export interface IReadOnlyKernel extends IResolverRoot {
-  get<T>(service: symbol): T;
+  get<T>(): T;
+  get(service: symbol): any;
+  getAll<T>(): T[];
+  getAll(service: symbol): any[];
 }
 
 export interface IKernel extends IReadOnlyKernel {
@@ -142,8 +145,8 @@ export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>,
 /** create a class provider with three constructor arguments*/
 export function toClass<T, P1, P2, P3>(ctor: Newable3<T, P1, P2, P3>, p1: IProvider<P1>, p2: IProvider<P2>, p3: IProvider<P2>): IProvider<T>
 export function toClass(ctor?: any, ...providers: IProvider<any>[]) {
-  if(ctor === undefined) throw Error('called "toClass" without a Constructor argument');
-  
+  if (ctor === undefined) throw Error('called "toClass" without a Constructor argument');
+
   /** this is a hack due to is being a pain in the ass to add "to()" and import in a transformer.
    * see https://github.com/Microsoft/TypeScript/issues/18369
    */
