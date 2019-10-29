@@ -65,18 +65,34 @@ export class Kernel implements IKernel {
       _parent = _parent.parent;
     };
 
-    for (let binding of bindings) {
-      let ctx: IContext = {
-        kernel: this,
-        target,
-        parent,
-        resolve: (service: symbol) => this.resolve(service, ctx)
-      }
-      let resolved = binding.provider(ctx);
-      if (resolved !== undefined) {
-        results.push(resolved);
+    if (bindings != undefined) {
+      for (let binding of bindings) {
+        let ctx: IContext = {
+          kernel: this,
+          target,
+          parent,
+          resolve: (service: symbol) => this.resolve(service, ctx)
+        }
+        let resolved = binding.provider(ctx);
+        if (resolved !== undefined) {
+          results.push(resolved);
+        }
       }
     }
+
+    if (results.length == 0) {
+      let history = [];
+      let _parent = parent;
+      while (_parent != undefined) {
+        history.push(_parent.target);
+        _parent = _parent.parent;
+      };
+
+      let msg = history.reduceRight((p, n) => p +=  " > " + n.toString(), "")
+
+      throw Error("could not resolve " + target.valueOf().toString() + msg );
+    }
+
     return results;
   }
 
