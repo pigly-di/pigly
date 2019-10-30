@@ -1,29 +1,10 @@
+import { IContext } from "./_context";
+import { IProvider } from "./_provider";
+import { IReadOnlyKernel } from "./_read-only-kernel";
+import { IBinding } from "./_binding";
+
 export declare function SymbolFor<T>(): symbol;
 
-export interface IResolverRoot {
-  resolve<T>(service: symbol): T[];
-}
-
-export interface IContext extends IResolverRoot {
-  kernel: IReadOnlyKernel;
-  target: symbol;
-  parent?: IContext;
-}
-
-export interface IBinding {
-  provider: (ctx: IContext) => any
-}
-
-export interface IProvider<T> {
-  (ctx: IContext): T;
-}
-
-export interface IReadOnlyKernel extends IResolverRoot {
-  get<T>(): T;
-  get(service: symbol): any;
-  getAll<T>(): T[];
-  getAll(service: symbol): any[];
-}
 
 export interface IKernel extends IReadOnlyKernel {
   /**Bind a Symbol to a provider */
@@ -134,50 +115,6 @@ export function toAll<T>(service?: symbol): IProvider<T[]> {
 
 export function toValue<T>(value: T): IProvider<T> {
   return (_) => value;
-}
-export interface Newable0<T> {
-  new(): T;
-}
-export interface Newable1<T, P1> {
-  new(p1: P1): T;
-}
-export interface Newable2<T, P1, P2> {
-  new(p1: P1, p2: P2): T;
-}
-export interface Newable3<T, P1, P2, P3> {
-  new(p1: P1, p2: P2, p3: P3): T;
-}
-
-///** REQUIRES TRANSFORMER - create a class provider where the constructor arguments are exclusively interface types */
-//export function toClass<T>(): IProvider<T>
-
-
-/** create a class provider with zero constructor arguments*/
-export function toClass<T>(ctor: Newable0<T>): IProvider<T>
-/** create a class provider with one constructor arguments*/
-export function toClass<T, P1>(ctor: Newable1<T, P1>, p1: IProvider<P1>): IProvider<T>
-/** create a class provider with two constructor arguments*/
-export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>, p2: IProvider<P2>): IProvider<T>
-/** create a class provider with three constructor arguments*/
-export function toClass<T, P1, P2, P3>(ctor: Newable3<T, P1, P2, P3>, p1: IProvider<P1>, p2: IProvider<P2>, p3: IProvider<P2>): IProvider<T>
-export function toClass(ctor?: any, ...providers: IProvider<any>[]) {
-  if (ctor === undefined) throw Error('called "toClass" without a Constructor argument');
-
-  /** this is a hack due to is being a pain in the ass to add "to()" and import in a transformer.
-   * see https://github.com/Microsoft/TypeScript/issues/18369
-   */
-  /*providers = providers.map(x=>{
-    if(typeof x === "symbol"){
-      return to(x);
-    }
-    return x;
-  })
-
-  console.log(ctor);*/
-
-  return (ctx: IContext) => {
-    return new ctor(...providers.map(provider => provider(ctx)));
-  }
 }
 
 export function toConst<T>(value: T) {
