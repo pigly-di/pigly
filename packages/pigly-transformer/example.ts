@@ -1,19 +1,21 @@
-import { Kernel, toClass, toConst, when, injectedInto } from 'pigly';
+import { Kernel, toClass, toSelf, toConst, when, injectedInto, to, SymbolFor } from 'pigly';
 import { IFoo, Foo, IBar, Bar } from './_foo';
 
 function entry() {
-  const _ = Foo; //todo work out a way to keep the import
   let kernel = new Kernel();
 
-  kernel.bind<IFoo>(toClass<Foo>());
-  kernel.bind<IBar>(toClass<Bar>());
+  kernel.bind(toSelf(Foo));
+  kernel.bind(toSelf(Bar));
+
+  kernel.bind<IFoo>(to<Foo>());
+  kernel.bind<IBar>(to<Bar>());
 
   kernel.bind<string>(
-    when(injectedInto<IBar>(),
+    when(injectedInto<Bar>(),
       toConst("hello")
     ));
   kernel.bind<string>(
-    when(injectedInto<IFoo>(),
+    when(injectedInto(SymbolFor<Foo>()),
       toConst("world")
     ));
 

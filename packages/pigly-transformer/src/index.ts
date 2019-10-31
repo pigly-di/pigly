@@ -48,20 +48,26 @@ function visitNode(node: ts.Node, program: ts.Program) {
         if (ts.isIdentifier(arg)) {
           return createSymbolFor(arg.escapedText.toString());
         }
+        if (ts.isTypeReferenceNode(arg)) {
+          return createSymbolFor(arg.typeName.getText());
+        }
       }
 
       if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
 
-      if ((methodName == "toClass" && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
-        return createCtorCallWithInjectedProviders(node, typeChecker);
+      //if ((methodName == "toClass" && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
+      //  return createCtorCallWithInjectedProviders(node, typeChecker);
+      //}
+      if ((methodName == "toSelf" && methodArgs.length == 1)) {
+        return createSelfCtorCallWithInjectedProviders(node, typeChecker);
       }
     }
     else if (ts.isPropertyAccessExpression(node.expression)) {
       methodName = node.expression.name.escapedText.toString()
 
-      if ((methodName == "bind" && typeArgs && typeArgs.length == 1 && methodArgs.length == 1)) {
+      if ((methodName == "bind" && methodArgs.length == 1)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
       if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
@@ -96,23 +102,45 @@ function createSymbolFor(escapedName: string) {
   return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(escapedName)]);
 }
 
+
 function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
 
-  const typeArgument = node.typeArguments[0];
   //const type = typeChecker.getTypeFromTypeNode(typeArgument);
   //console.log("Identifier", typeArgument);
 
   let typeSymbol: ts.CallExpression;
 
-  if (ts.isTypeReferenceNode(typeArgument)) {
-    typeSymbol = createSymbolFor(typeArgument.getFullText());
-  } else if (ts.isToken(typeArgument)) {
-    switch (typeArgument.kind) {
-      case ts.SyntaxKind.StringKeyword:
-        typeSymbol = createSymbolFor("string");
-        break;
+  if (node.typeArguments && node.typeArguments[0]) {
+    const typeArgument = node.typeArguments[0];
+
+    if (ts.isTypeReferenceNode(typeArgument)) {
+      typeSymbol = createSymbolFor(typeArgument.getFullText());
+    } else if (ts.isToken(typeArgument)) {
+      switch (typeArgument.kind) {
+        case ts.SyntaxKind.StringKeyword:
+          typeSymbol = createSymbolFor("string");
+          break;
+      }
     }
   }
+  else{
+    let typeArgument = inferTypeArguments(node, typeChecker);
+
+    if(typeArgument && typeArgument[0]){
+      typeSymbol = createSymbolFor(typeArgument[0].symbol.name);
+    }
+
+    /*if (ts.isTypeReferenceNode(typeArgument)) {
+      typeSymbol = createSymbolFor(typeArgument.getFullText());
+    } else if (ts.isToken(typeArgument)) {
+      switch (typeArgument.kind) {
+        case ts.SyntaxKind.StringKeyword:
+          typeSymbol = createSymbolFor("string");
+          break;
+      }
+    }*/
+  }
+  
 
   if (typeSymbol !== undefined) {
     const args = [];
@@ -136,7 +164,7 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 }
 
 
-function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
+/*function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
   const typeArgument = node.typeArguments[0];
   const type = typeChecker.getTypeFromTypeNode(typeArgument);
 
@@ -186,6 +214,61 @@ function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecke
   }
 
   return node;
+}*/
+
+
+function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
+
+  //console.log(node);
+  const ctorArg = node.arguments[0];
+  const type = typeChecker.getTypeAtLocation(ctorArg);
+
+  if (type.symbol.valueDeclaration != null) {
+    let ctors = getClassConstructSignatures(type as ts.InterfaceType, typeChecker);
+
+    let ctor = ctors[0];
+
+    let params = getConstructorParameters(ctor, typeChecker);
+
+    //console.log(ctor);
+
+    if (params.findIndex(x => x === null) != -1) {
+      throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
+    }
+
+    let providerCalls = params.map(param => {
+      return ts.createArrowFunction(
+        undefined,
+        undefined,
+        [
+          ts.createParameter([], [], null, 'ctx', null, ts.createTypeReferenceNode('any', []))
+        ],
+        undefined,
+        undefined,
+        ts.createElementAccess(
+          ts.createCall(
+            ts.createPropertyAccess(
+              ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
+            undefined,
+            [param]
+          ), 0))
+    })
+
+    const nodeResult = ts.getMutableClone(node);
+
+
+
+    //console.log(typeArgument);
+
+    nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
+    nodeResult.arguments = ts.createNodeArray<ts.Expression>([
+      node.arguments[0],
+      , ...providerCalls
+    ]);
+    return nodeResult;
+  }
+
+  return node;
 }
 
 function getClassConstructSignatures(type: ts.InterfaceType, typeChecker: ts.TypeChecker) {
@@ -220,6 +303,22 @@ function getConstructorParameters(ctor: ts.Signature, typeChecker: ts.TypeChecke
   }
   return params;
 }
+
+//https://stackoverflow.com/questions/48886508/typechecker-api-how-do-i-find-inferred-type-arguments-to-a-function
+type TypeMapper = (t: ts.TypeParameter) => ts.Type;
+function inferTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker): ts.Type[] {
+  const signature = typeChecker.getResolvedSignature(node);
+  const targetParams: ts.TypeParameter[] = signature['target'] && signature['target'].typeParameters;
+  if (!targetParams) {
+    return [];
+  }
+  const mapper: TypeMapper = signature['mapper'];
+  return mapper
+    ? targetParams.map(p => mapper(p))
+    : targetParams;
+}
+
+
 //need to ensure imports still work for toClass<T>() - 
 //https://github.com/Microsoft/TypeScript/issues/18369
 export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
