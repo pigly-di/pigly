@@ -1,6 +1,5 @@
 export interface IFoo {
-  value: string;
-  bar: IBar;
+  bar: IBar[]
 }
 
 export interface IBar {
@@ -8,7 +7,7 @@ export interface IBar {
 }
 
 export class Foo implements IFoo {
-  constructor(public bar: IBar, public value: string) { }
+  constructor(public bar: IBar[]) { }
 }
 
 export class Bar implements IBar {

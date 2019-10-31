@@ -123,10 +123,10 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
       }
     }
   }
-  else{
+  else {
     let typeArgument = inferTypeArguments(node, typeChecker);
 
-    if(typeArgument && typeArgument[0]){
+    if (typeArgument && typeArgument[0]) {
       typeSymbol = createSymbolFor(typeArgument[0].symbol.name);
     }
 
@@ -140,7 +140,7 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
       }
     }*/
   }
-  
+
 
   if (typeSymbol !== undefined) {
     const args = [];
@@ -228,35 +228,14 @@ function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeCh
 
     let ctor = ctors[0];
 
-    let params = getConstructorParameters(ctor, typeChecker);
+    let providerCalls = getConstructorProviders(ctor, typeChecker);
 
-    //console.log(ctor);
-
-    if (params.findIndex(x => x === null) != -1) {
+    if (providerCalls.findIndex(x => x === null) != -1) {
       throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
     }
 
-    let providerCalls = params.map(param => {
-      return ts.createArrowFunction(
-        undefined,
-        undefined,
-        [
-          ts.createParameter([], [], null, 'ctx', null, ts.createTypeReferenceNode('any', []))
-        ],
-        undefined,
-        undefined,
-        ts.createElementAccess(
-          ts.createCall(
-            ts.createPropertyAccess(
-              ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
-            undefined,
-            [param]
-          ), 0))
-    })
 
     const nodeResult = ts.getMutableClone(node);
-
-
 
     //console.log(typeArgument);
 
@@ -277,31 +256,66 @@ function getClassConstructSignatures(type: ts.InterfaceType, typeChecker: ts.Typ
   return constructorType.getConstructSignatures();
 }
 
-function getConstructorParameters(ctor: ts.Signature, typeChecker: ts.TypeChecker) {
-  let params: ts.CallExpression[] = [];
+function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker): ts.Expression[] {
+  let params: ts.Expression[] = [];
   for (let param of ctor.parameters) {
     let paramDecl = param.declarations[0];
 
-    ts.createToken(ts.SyntaxKind.StringKeyword)
-    if (ts.isParameter(paramDecl) && ts.isTypeReferenceNode(paramDecl.type)) {
-      const symbol = typeChecker.getSymbolAtLocation(paramDecl.type.typeName);
-      const type = typeChecker.getDeclaredTypeOfSymbol(symbol);
-      params.push(createSymbolFor(type.symbol.name));
+    if (ts.isParameter(paramDecl)) {
 
-    } else if (ts.isParameter(paramDecl) && ts.isToken(paramDecl.type)) {
-      switch (paramDecl.type.kind) {
-        case ts.SyntaxKind.StringKeyword:
-          params.push(createSymbolFor("string"));
-          break;
-        default:
-          params.push(null);
+      let paramType = paramDecl.type;
+      let isArray = false;      
+
+      if (ts.isArrayTypeNode(paramType)) {
+        paramType = paramType.elementType;
+        isArray = true;
       }
-    }
-    else {
-      params.push(null);
+
+      if (ts.isTypeReferenceNode(paramType)) {
+        const symbol = typeChecker.getSymbolAtLocation(paramType.typeName);
+        const type = typeChecker.getDeclaredTypeOfSymbol(symbol);
+        params.push(createProvider(createSymbolFor(type.symbol.name), isArray));
+
+      } else if (ts.isToken(paramDecl.type)) {
+        switch (paramDecl.type.kind) {
+          case ts.SyntaxKind.StringKeyword:
+            params.push(createProvider(createSymbolFor("string"), isArray));
+            break;
+          default:
+            params.push(null);
+        }
+      }
+      else {
+        params.push(null);
+      }
     }
   }
   return params;
+}
+
+function createProvider(symbol: ts.CallExpression, isArray: boolean) {
+
+  let elmt: ts.Expression = ts.createCall(
+    ts.createPropertyAccess(
+      ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
+    undefined,
+    [symbol]
+  )
+
+  if (isArray == false) {
+    elmt = ts.createElementAccess(elmt, 0)
+  }
+
+  return ts.createArrowFunction(
+    undefined,
+    undefined,
+    [
+      ts.createParameter([], [], null, 'ctx', null, ts.createTypeReferenceNode('any', []))
+    ],
+    undefined,
+    undefined,
+    elmt
+  )
 }
 
 //https://stackoverflow.com/questions/48886508/typechecker-api-how-do-i-find-inferred-type-arguments-to-a-function

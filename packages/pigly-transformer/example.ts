@@ -5,20 +5,11 @@ function entry() {
   let kernel = new Kernel();
 
   kernel.bind(toSelf(Foo));
-  kernel.bind(toSelf(Bar));
 
   kernel.bind<IFoo>(to<Foo>());
-  kernel.bind<IBar>(to<Bar>());
-
-  kernel.bind<string>(
-    when(injectedInto<Bar>(),
-      toConst("hello")
-    ));
-  kernel.bind<string>(
-    when(injectedInto(SymbolFor<Foo>()),
-      toConst("world")
-    ));
-
+  kernel.bind<IBar>(toClass(Bar, toConst("hello")));
+  kernel.bind<IBar>(toClass(Bar, toConst("world")));
+  
   let foo = kernel.get<IFoo>();
 
   console.log(foo);
