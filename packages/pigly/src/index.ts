@@ -1,4 +1,4 @@
-
+export * from './predicates';
 export * from './providers';
 
 export * from './_binding';

@@ -132,12 +132,6 @@ export function asSingleton<T>(provider: IProvider<T>) {
   };
 }
 
-export function when<T>(predicate: (ctx: IContext) => boolean, provider: IProvider<T>) {
-  return (ctx: IContext) => {
-    if (predicate(ctx)) return provider(ctx);
-  };
-}
-
 /** 
  * 
  * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
