@@ -215,9 +215,22 @@ kernel.bind<IFoo>(to<Foo>());
 let foo = kernel.get<IFoo>();
 ```
 
+## toSelf<T>(Class)
+
+attempts to infer the constructor arguments and generate the providers needed to initialise the class. It can only do so if the constructor arguments are simple. Currently only supports the _first_ constructor. 
+
+```ts
+kernel.bind(toSelf(Foo));
+```
+is equivalent to 
+```ts
+kernel.bind(toClass(Foo, to<IBar>, to...
+```
+
+
 ## SymbolFor<T>()
 
-calls to SymbolFor<T>() get replaced with `symbol.for("<name of T>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
+calls to SymbolFor<T>() get replaced with `symbol.for("<T>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
 
 ```ts
 let kernel = new Kernel();
@@ -225,7 +238,7 @@ let kernel = new Kernel();
 const $IFoo = SymbolFor<IFoo>();
 const $IBar = SymbolFor<IBar>();
 
-kernel.bind<IFoo>($IFoo, toClass(Foo, to<IBar>($IBar,)));
+kernel.bind<IFoo>($IFoo, toClass(Foo, to<IBar>($IBar)));
 kernel.bind<IBar>($IBar, toClass(Bar));
 
 let foo = kernel.get<IFoo>($IFoo);
