@@ -17,12 +17,17 @@ export interface Newable4<T, P1, P2, P3, P4> {
   new(p1: P1, p2: P2, p3: P3, p4: P4): T;
 }
 export interface Newable5<T, P1, P2, P3, P4, P5> {
-  new(p1: P1, p2: P2, p3: P3, p4: P4, p5:P5): T;
+  new(p1: P1, p2: P2, p3: P3, p4: P4, p5: P5): T;
 }
+export type Newable<T> = {
+  new(...args: any[]): T;
+}
+
 
 
 ///** REQUIRES TRANSFORMER - create a class provider where the constructor arguments are exclusively inferable interface types */
 //export function toClass<T>(): IProvider<T>
+export function toClass<T>(): IProvider<T>
 export function toClass<T>(ctor: Newable0<T>): IProvider<T>
 export function toClass<T, P1>(ctor: Newable1<T, P1>, p1: IProvider<P1>): IProvider<T>
 export function toClass<T, P1, P2>(ctor: Newable2<T, P1, P2>, p1: IProvider<P1>, p2: IProvider<P2>): IProvider<T>
