@@ -18,6 +18,14 @@ function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.Tr
 function visitNode(node: ts.Node, program: ts.Program) {
   const typeChecker = program.getTypeChecker();
 
+  //if (ts.isImportDeclaration(node)) {
+  //  console.log("IMPORT", node);
+  //}
+
+  ////if(ts.isVariableDeclaration(node)){
+  //console.log("VARIABLE:", node);
+  //}
+
   if (ts.isCallExpression(node)) {
     let methodArgs = node.arguments;
     let typeArgs = node.typeArguments;
@@ -30,7 +38,7 @@ function visitNode(node: ts.Node, program: ts.Program) {
 
       if (methodName == "SymbolFor") {
 
-        console.log("Transforming SymbolFor", node.typeArguments[0]);
+        //console.log("Transforming SymbolFor", node.typeArguments[0]);
 
         if (!node.typeArguments) {
           throw new Error("No type arguments provided to `InterfaceSymbol<T>()`.");
@@ -89,16 +97,27 @@ function createSymbolFor(escapedName: string) {
 }
 
 function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
+
   const typeArgument = node.typeArguments[0];
   //const type = typeChecker.getTypeFromTypeNode(typeArgument);
   //console.log("Identifier", typeArgument);
 
-  if (ts.isTypeReferenceNode(typeArgument)) {
+  let typeSymbol: ts.CallExpression;
 
-    const injectNode = createSymbolFor(typeArgument.getFullText());
+  if (ts.isTypeReferenceNode(typeArgument)) {
+    typeSymbol = createSymbolFor(typeArgument.getFullText());
+  } else if (ts.isToken(typeArgument)) {
+    switch (typeArgument.kind) {
+      case ts.SyntaxKind.StringKeyword:
+        typeSymbol = createSymbolFor("string");
+        break;
+    }
+  }
+
+  if (typeSymbol !== undefined) {
     const args = [];
 
-    args.push(injectNode);
+    args.push(typeSymbol);
     for (let arg of node.arguments) {
       args.push(arg);
     }
@@ -112,8 +131,10 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 
     return nodeResult;
   }
+
   return node;
 }
+
 
 function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
   const typeArgument = node.typeArguments[0];
@@ -123,14 +144,16 @@ function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecke
     let ctors = getClassConstructSignatures(type, typeChecker);
 
     let ctor = ctors[0];
+
     let params = getConstructorParameters(ctor, typeChecker);
+
+    //console.log(ctor);
 
     if (params.findIndex(x => x === null) != -1) {
       throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
     }
-   
+
     let providerCalls = params.map(param => {
-      let provideSymbol = createSymbolFor(param.symbol.name);
       return ts.createArrowFunction(
         undefined,
         undefined,
@@ -139,12 +162,13 @@ function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecke
         ],
         undefined,
         undefined,
-        ts.createCall(
-          ts.createPropertyAccess(
-            ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
-          undefined,
-          [provideSymbol]
-        ))
+        ts.createElementAccess(
+          ts.createCall(
+            ts.createPropertyAccess(
+              ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
+            undefined,
+            [param]
+          ), 0))
     })
 
     const nodeResult = ts.getMutableClone(node);
@@ -155,7 +179,8 @@ function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecke
 
     nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
     nodeResult.arguments = ts.createNodeArray<ts.Expression>([
-      typeArgument.typeName, ...providerCalls
+      ts.createAsExpression(typeArgument.typeName, typeArgument)
+      , ...providerCalls
     ]);
     return nodeResult;
   }
@@ -170,20 +195,33 @@ function getClassConstructSignatures(type: ts.InterfaceType, typeChecker: ts.Typ
 }
 
 function getConstructorParameters(ctor: ts.Signature, typeChecker: ts.TypeChecker) {
-  let params: ts.Type[] = [];
+  let params: ts.CallExpression[] = [];
   for (let param of ctor.parameters) {
     let paramDecl = param.declarations[0];
+
+    ts.createToken(ts.SyntaxKind.StringKeyword)
     if (ts.isParameter(paramDecl) && ts.isTypeReferenceNode(paramDecl.type)) {
       const symbol = typeChecker.getSymbolAtLocation(paramDecl.type.typeName);
       const type = typeChecker.getDeclaredTypeOfSymbol(symbol);
-      params.push(type);
-    } else {
+      params.push(createSymbolFor(type.symbol.name));
+
+    } else if (ts.isParameter(paramDecl) && ts.isToken(paramDecl.type)) {
+      switch (paramDecl.type.kind) {
+        case ts.SyntaxKind.StringKeyword:
+          params.push(createSymbolFor("string"));
+          break;
+        default:
+          params.push(null);
+      }
+    }
+    else {
       params.push(null);
     }
   }
   return params;
 }
-
+//need to ensure imports still work for toClass<T>() - 
+//https://github.com/Microsoft/TypeScript/issues/18369
 export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
   return (context: ts.TransformationContext) => (file: ts.Node) => visitNodeAndChildren(file, program, context);
 }
