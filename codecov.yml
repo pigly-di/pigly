@@ -3,15 +3,15 @@ coverage:
     project:
       default:
         threshold: 0.10%
-      core:
-        flags: core
-      viewer:
-        flags: viewer
+      pigly:
+        flags: pigly
+      transformer:
+        flags: transformer
     patch: off
 flags:
-  core:
+  pigly:
     paths:
-      - packages/pigly
-  viewer:
+      - packages/pigly/src
+  transformer:
     paths:
-      - packages/pigly-transformer
+      - packages/pigly-transformer/src
