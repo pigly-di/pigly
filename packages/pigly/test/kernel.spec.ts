@@ -1,6 +1,5 @@
-import { Kernel, toConst, toClass, to, asSingleton, IContext, when, defer } from "../src";
+import { Kernel, toConst, toClass, to, asSingleton, IContext, when, defer, hasAncestor } from "../src";
 import { expect } from 'chai';
-
 
 interface IFoo {
   bar: IBar;
@@ -188,13 +187,13 @@ describe("Providers", () => {
 
     const $IFoo = Symbol.for("IFoo");
 
-    kernel.bind($IFoo, _=>1);
-    kernel.bind($IFoo, _=>2);
-    kernel.bind($IFoo, _=>3);
+    kernel.bind($IFoo, _ => 1);
+    kernel.bind($IFoo, _ => 2);
+    kernel.bind($IFoo, _ => 3);
 
     let foo = kernel.getAll<IFoo>($IFoo);
 
-    expect(foo, "result is array").is.eql([1,2,3])
+    expect(foo, "result is array").is.eql([1, 2, 3])
   })
 })
 
@@ -254,5 +253,42 @@ describe("Deferred Injection", () => {
       expect(bar.foo).is.equal(foo);
       done();
     });
+  })
+})
+
+
+describe("Predicates", () => {
+  describe("hasAncestor", () => {
+    it("can inject symbol if ancestor matches", () => {
+      const kernel = new Kernel();
+
+      const A = Symbol.for("A");
+      const B = Symbol.for("B");
+      const C = Symbol.for("C");
+
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+      kernel.bind(B, to(A));
+      kernel.bind(C, to(B));
+
+      let c = kernel.get(C);
+
+      expect(c).to.be.eq("foo");
+    })
+
+    it("throws if request does not have required ancestor", () => {
+      const kernel = new Kernel();
+
+      const A = Symbol.for("A");
+      const B = Symbol.for("B");
+      const C = Symbol.for("C");
+
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+      kernel.bind(B, to(A));
+      kernel.bind(C, to(B));
+
+      expect(() => {
+        let b = kernel.get(B);
+      }).throws()
+    })
   })
 })
