@@ -13,7 +13,7 @@
     "rootDir": "src/",
     "plugins": [
       {
-        "transform": "./src/index.ts"
+        "transform": "@pigly/transform"
       },
     ]
   },

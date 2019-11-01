@@ -28,7 +28,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "test": "cross-env TS_NODE_COMPILER=ttypescript nyc mocha test/**/*.spec.ts",
-    "example": "cross-env TS_NODE_COMPILER=ttypescript ts-node example.ts",
+    "example": "ts-node --compiler ttypescript example.ts",
     "coverage": "codecov --flags transformer"
   },
   "nyc": {
