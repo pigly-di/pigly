@@ -181,6 +181,24 @@ kernel.bind(C, when(injectedInto(A), toConst("a")));
 kernel.bind(C, when(injectedInto(B), toConst("b")));
 ```
 
+### hasAncestor(symbol)
+
+returns true if an request ancestor is equal to the symbol. 
+
+```ts
+  const A = Symbol.for("A");
+  const B = Symbol.for("B");
+  const C = Symbol.for("C");
+
+  kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+  kernel.bind(A, toConst("bar")));  
+  kernel.bind(B, to(A));
+  kernel.bind(C, to(B));
+
+  let c = kernel.get(C); // "foo"
+  let b = kernel.get(B); // "bar"
+```
+
 ## Transformer Usage
 
 with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/packages/pigly-transformer) you are able to omit manually creating a symbol. Currently 
@@ -191,6 +209,7 @@ with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/packa
 * `toAll<T>()`
 * `toSelf<T>(Class)`
 * `injectedInto<T>()`
+* `hasAncestor<T>()`
 * `Inject<T>()`
 
 are supported. 
