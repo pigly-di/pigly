@@ -22,14 +22,37 @@
     "nyc": "^14.1.0",
     "source-map-support": "^0.5.12",
     "ttypescript": "^1.5.6",
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "cross-env": "^6.0.3"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "test": "ts-node --compiler ttypescript example.ts"
+    "test": "cross-env TS_NODE_COMPILER=ttypescript nyc mocha test/**/*.spec.ts",
+    "example": "cross-env TS_NODE_COMPILER=ttypescript ts-node example.ts",
+    "coverage": "codecov --flags transformer"
+  },
+  "nyc": {
+    "exclude": [
+      "node_modules/",
+      "test/"
+    ],
+    "extension": [
+      ".ts"
+    ],
+    "require": [
+      "source-map-support/register",
+      "ts-node/register"
+    ],
+    "reporter": [
+      "text-summary",
+      "html",
+      "lcov"
+    ],
+    "sourceMap": true,
+    "instrument": true
   },
   "peerDependencies": {
-    "typescript": "latest"
+    "typescript": "^3.0.0"
   },
   "files": [
     "/dist/*",

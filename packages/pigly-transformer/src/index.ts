@@ -53,7 +53,7 @@ function visitNode(node: ts.Node, program: ts.Program) {
         }
       }
 
-      if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
+      if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto" || methodName == "hasAncestor") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
 

@@ -274,6 +274,24 @@ describe("Predicates", () => {
 
       expect(c).to.be.eq("foo");
     })
+    it("can inject symbol if ancestor matches and fall-back to other bindings", () => {
+      const kernel = new Kernel();
+
+      const A = Symbol.for("A");
+      const B = Symbol.for("B");
+      const C = Symbol.for("C");
+
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+      kernel.bind(A, toConst("bar"));
+      kernel.bind(B, to(A));
+      kernel.bind(C, to(B));
+
+      let c = kernel.get(C);
+      let b = kernel.get(B);
+
+      expect(c).to.be.eq("foo");
+      expect(b).to.be.eq("bar");
+    })
 
     it("throws if request does not have required ancestor", () => {
       const kernel = new Kernel();
