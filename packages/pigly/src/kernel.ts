@@ -2,7 +2,8 @@ import { IContext } from "./_context";
 import { IProvider } from "./_provider";
 import { IBinding } from "./_binding";
 import { IKernel } from "./_kernel";
-import { Service } from "./_service";
+import { Service, isService } from "./_service";
+import { first } from "./utils";
 
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>()
@@ -12,8 +13,8 @@ export class Kernel implements IKernel {
   /**REQUIRES TRANSFORMER: Bind interface T to a provider */
   bind<T>(provider: IProvider<T>): void;
   bind<T>(service: any, provider?: IProvider<T>) {
-    if (isSymbol(service) === false) {
-      throw Error("first argument must be a symbol.");
+    if (isService(service) === false) {
+      throw Error("first argument must be a service type");
     }
 
     let bindings: IBinding[] = [];
@@ -24,10 +25,9 @@ export class Kernel implements IKernel {
 
     this._bindings.set(service, bindings);
   }
-  /** Resolve the target symbol bindings to providers, execute them and return the results */
-  resolve<T>(target: Service, parent?: IContext): T[] {
+  /** Resolve the target to providers, execute them and return the results */
+  *resolve<T>(target: Service, parent?: IContext){
     let bindings = this._bindings.get(target);
-    let results: any[] = [];
 
     let _parent = parent;
     while (_parent != undefined) {
@@ -37,22 +37,28 @@ export class Kernel implements IKernel {
       _parent = _parent.parent;
     };
 
+    let wasResolved = false;
+
     if (bindings != undefined) {
       for (let binding of bindings) {
-        let ctx: IContext = {
+        let ctx: IContext & { _resolveFirst, _resolveAll} = {
           kernel: this,
           target,
           parent,
-          resolve: (service: Service) => this.resolve(service, ctx)
-        }
+          resolve: (service: Service) => this.resolve(service, ctx),
+          /* these are needed to simplify the transformer */
+          _resolveFirst: (service: Service) => first(this.resolve(service, ctx)),
+          _resolveAll: (service: Service) => Array.from(this.resolve(service, ctx))
+        }        
         let resolved = binding.provider(ctx);
         if (resolved !== undefined) {
-          results.push(resolved);
+          wasResolved = true;
+          yield resolved;                              
         }
       }
     }
 
-    if (results.length == 0) {
+    if (wasResolved == false) {
       let history = [];
       let _parent = parent;
       while (_parent != undefined) {
@@ -64,8 +70,6 @@ export class Kernel implements IKernel {
 
       throw Error("could not resolve " + target.valueOf().toString() + msg );
     }
-
-    return results;
   }
 
   /** REQUIRES TRANSFORMER - resolve an interface to a value */
@@ -73,8 +77,8 @@ export class Kernel implements IKernel {
   /** resolve a symbol to a value */
   get<T>(service: Service): T
   get<T>(service?: Service): T {
-    if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
-    return this.resolve<T>(service)[0];
+    if (isService(service) == false) throw Error('called "get" without a service');
+    return first(this.resolve<T>(service));
   }
 
   /** REQUIRES TRANSFORMER - resolve an interface to a value array */
@@ -82,11 +86,7 @@ export class Kernel implements IKernel {
   /** resolve a symbol to a value array*/
   getAll<T>(service: Service): T[]
   getAll<T>(service?: Service): T[] {
-    if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
-    return this.resolve<T>(service);
+    if (isService(service) == false) throw Error('called "getAll" without a service');
+    return Array.from(this.resolve<T>(service));
   }
-}
-
-function isSymbol(obj): obj is symbol {
-  return typeof obj === "symbol";
 }
