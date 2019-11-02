@@ -115,7 +115,7 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 
     if (ts.isTypeReferenceNode(typeArgument)) {
       typeSymbol = createSymbolFor(typeArgument.getFullText());
-    } 
+    }
     else if (ts.isToken(typeArgument)) {
       switch (typeArgument.kind) {
         case ts.SyntaxKind.StringKeyword:
@@ -168,59 +168,6 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 }
 
 
-/*function createCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
-  const typeArgument = node.typeArguments[0];
-  const type = typeChecker.getTypeFromTypeNode(typeArgument);
-
-  if (type.isClass() && ts.isTypeReferenceNode(typeArgument) && ts.isIdentifier(typeArgument.typeName)) {
-    let ctors = getClassConstructSignatures(type, typeChecker);
-
-    let ctor = ctors[0];
-
-    let params = getConstructorParameters(ctor, typeChecker);
-
-    //console.log(ctor);
-
-    if (params.findIndex(x => x === null) != -1) {
-      throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
-    }
-
-    let providerCalls = params.map(param => {
-      return ts.createArrowFunction(
-        undefined,
-        undefined,
-        [
-          ts.createParameter([], [], null, 'ctx', null, ts.createTypeReferenceNode('any', []))
-        ],
-        undefined,
-        undefined,
-        ts.createElementAccess(
-          ts.createCall(
-            ts.createPropertyAccess(
-              ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
-            undefined,
-            [param]
-          ), 0))
-    })
-
-    const nodeResult = ts.getMutableClone(node);
-
-
-
-    //console.log(typeArgument);
-
-    nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
-    nodeResult.arguments = ts.createNodeArray<ts.Expression>([
-      ts.createAsExpression(typeArgument.typeName, typeArgument)
-      , ...providerCalls
-    ]);
-    return nodeResult;
-  }
-
-  return node;
-}*/
-
-
 function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
 
   //console.log(node);
@@ -268,7 +215,7 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
     if (ts.isParameter(paramDecl)) {
 
       let paramType = paramDecl.type;
-      let isArray = false;      
+      let isArray = false;
 
       if (ts.isArrayTypeNode(paramType)) {
         paramType = paramType.elementType;
@@ -302,15 +249,20 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
 
 function createProvider(symbol: ts.CallExpression, isArray: boolean) {
 
-  let elmt: ts.Expression = ts.createCall(
-    ts.createPropertyAccess(
-      ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
-    undefined,
-    [symbol]
-  )
+  let elmt: ts.Expression;
 
-  if (isArray == false) {
-    elmt = ts.createElementAccess(elmt, 0)
+  if (isArray) {
+    elmt = ts.createCall(
+      ts.createPropertyAccess(
+        ts.createIdentifier("ctx"), ts.createIdentifier("_resolveAll")),
+      undefined,
+      [symbol]);
+  } else {
+    elmt = ts.createCall(
+      ts.createPropertyAccess(
+        ts.createIdentifier("ctx"), ts.createIdentifier("_resolveFirst")),
+      undefined,
+      [symbol]);
   }
 
   return ts.createArrowFunction(
