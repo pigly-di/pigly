@@ -81,6 +81,33 @@ describe("Kernel Basics", () => {
 
     expect(result, "result is 10").to.eql([10, 11]);
   })
+
+  it("should ignore providers returning undefined", () => {
+    const kernel = new Kernel();
+
+    const A = Symbol.for("A");
+
+    kernel.bind(A, _=> undefined);
+    kernel.bind(A, toConst("hello"));
+
+    let result = kernel.get(A);
+
+    expect(result).to.be.eq("hello");
+  })
+
+  it("should lazily resolve bindings", () => {
+    const kernel = new Kernel();
+
+    const A = Symbol.for("A");
+
+    kernel.bind(A, _=> undefined);
+    kernel.bind(A, toConst("hello"));
+    kernel.bind(A, _=>{throw Error("should not be called")});
+
+    let result = kernel.get(A);
+
+    expect(result).to.be.eq("hello");
+  })  
 })
 
 describe("Resolving Context", () => {
@@ -124,33 +151,17 @@ describe("Resolving Context", () => {
     expect(() => {
       kernel.get(A);
     }).throws("Cyclic Dependency Found");
-  })  
-  
-  it("should ignore providers returning undefined", () => {
-    const kernel = new Kernel();
-
-    const A = Symbol.for("A");
-
-    kernel.bind(A, _=> undefined);
-    kernel.bind(A, toConst("hello"));
-
-    let result = kernel.get(A);
-
-    expect(result).to.be.eq("hello");
   })
-
-  it("should lazily resolve bindings", () => {
+  it("should throw on no resolution", () => {
     const kernel = new Kernel();
 
     const A = Symbol.for("A");
 
-    kernel.bind(A, _=> undefined);
-    kernel.bind(A, toConst("hello"));
-    kernel.bind(A, _=>{throw Error("should not be called")});
-
-    let result = kernel.get(A);
-
-    expect(result).to.be.eq("hello");
+    kernel.bind(A, _=>undefined);
+    
+    expect(() => {
+      kernel.get(A);
+    }).throws("could not resolve Symbol(A)");
   })
 })
 
