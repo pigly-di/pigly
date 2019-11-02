@@ -1,3 +1,5 @@
+import { Service } from "./_service";
+
 export interface IResolverRoot {
-  resolve<T>(service: symbol): T[];
+  resolve<T>(service: Service): T[];
 }

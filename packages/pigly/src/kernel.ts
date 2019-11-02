@@ -1,23 +1,14 @@
 import { IContext } from "./_context";
 import { IProvider } from "./_provider";
-import { IReadOnlyKernel } from "./_read-only-kernel";
 import { IBinding } from "./_binding";
-
-export declare function SymbolFor<T>(): symbol;
-
-
-export interface IKernel extends IReadOnlyKernel {
-  /**Bind a Symbol to a provider */
-  bind<T>(service: symbol, provider: IProvider<T>): void;
-  /**REQUIRES TRANSFORMER: Bind interface T to a provider */
-  bind<T>(provider: IProvider<T>): void;
-}
+import { IKernel } from "./_kernel";
+import { Service } from "./_service";
 
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>()
 
   /**Bind a Symbol to a provider */
-  bind<T>(service: symbol, provider: IProvider<T>): void;
+  bind<T>(service: Service, provider: IProvider<T>): void;
   /**REQUIRES TRANSFORMER: Bind interface T to a provider */
   bind<T>(provider: IProvider<T>): void;
   bind<T>(service: any, provider?: IProvider<T>) {
@@ -34,7 +25,7 @@ export class Kernel implements IKernel {
     this._bindings.set(service, bindings);
   }
   /** Resolve the target symbol bindings to providers, execute them and return the results */
-  resolve<T>(target: symbol, parent?: IContext): T[] {
+  resolve<T>(target: Service, parent?: IContext): T[] {
     let bindings = this._bindings.get(target);
     let results: any[] = [];
 
@@ -52,7 +43,7 @@ export class Kernel implements IKernel {
           kernel: this,
           target,
           parent,
-          resolve: (service: symbol) => this.resolve(service, ctx)
+          resolve: (service: Service) => this.resolve(service, ctx)
         }
         let resolved = binding.provider(ctx);
         if (resolved !== undefined) {
@@ -80,8 +71,8 @@ export class Kernel implements IKernel {
   /** REQUIRES TRANSFORMER - resolve an interface to a value */
   get<T>(): T;
   /** resolve a symbol to a value */
-  get<T>(service: symbol): T
-  get<T>(service?: symbol): T {
+  get<T>(service: Service): T
+  get<T>(service?: Service): T {
     if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
     return this.resolve<T>(service)[0];
   }
@@ -89,74 +80,12 @@ export class Kernel implements IKernel {
   /** REQUIRES TRANSFORMER - resolve an interface to a value array */
   getAll<T>(): T[];
   /** resolve a symbol to a value array*/
-  getAll<T>(service: symbol): T[]
-  getAll<T>(service?: symbol): T[] {
+  getAll<T>(service: Service): T[]
+  getAll<T>(service?: Service): T[] {
     if (typeof service !== "symbol") throw Error('called "get" without a service symbol');
     return this.resolve<T>(service);
   }
 }
-
-/** REQUIRES TRANSFORMER - create a provider that resolves to another type */
-export function to<T>(): IProvider<T>
-/** create a provider that resolves to another symbol */
-export function to<T>(service: symbol): IProvider<T>
-export function to<T>(service?: symbol): IProvider<T> {
-  if (typeof service !== "symbol") throw Error('called "to" without a service symbol');
-  return (ctx) => ctx.resolve(service)[0] as T;
-}
-/** REQUIRES TRANSFORMER - create a provider that resolves all bindings to a type */
-export function toAll<T>(): IProvider<T[]>
-/** create a provider that resolves all bindings to a symbol */
-export function toAll<T>(service: symbol): IProvider<T[]>
-export function toAll<T>(service?: symbol): IProvider<T[]> {
-  if (typeof service !== "symbol") throw Error('called "toAll" without a service symbol');
-  return (ctx) => ctx.resolve(service) as T[];
-}
-
-export function toValue<T>(value: T): IProvider<T> {
-  return (_) => value;
-}
-
-export function toConst<T>(value: T) {
-  return _ => {
-    return value;
-  };
-}
-
-export function asSingleton<T>(provider: IProvider<T>) {
-  var cache: T = undefined;
-
-  return (ctx: IContext) => {
-    if (!cache) cache = provider(ctx);
-    return cache;
-  };
-}
-
-/** 
- * 
- * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
-export function defer<T>(provider: IProvider<T>, inject: { [field: string]: symbol }) {
-  return (ctx: IContext) => {
-    let kernel = ctx.kernel;
-    let resolved = provider(ctx);
-    setImmediate(() => {
-      for (let [key, target] of entries(inject)) {
-        resolved[key] = kernel.get(target);
-      }
-    })
-    return resolved;
-  };
-}
-
-function entries(obj: { [field: string]: symbol }): Array<[string, symbol]> {
-  var ownProps = Object.keys(obj),
-    i = ownProps.length,
-    resArray = new Array(i); // preallocate the Array
-  while (i--)
-    resArray[i] = [ownProps[i], obj[ownProps[i]]];
-
-  return resArray;
-};
 
 function isSymbol(obj): obj is symbol {
   return typeof obj === "symbol";
