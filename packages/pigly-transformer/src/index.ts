@@ -115,10 +115,14 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 
     if (ts.isTypeReferenceNode(typeArgument)) {
       typeSymbol = createSymbolFor(typeArgument.getFullText());
-    } else if (ts.isToken(typeArgument)) {
+    } 
+    else if (ts.isToken(typeArgument)) {
       switch (typeArgument.kind) {
         case ts.SyntaxKind.StringKeyword:
           typeSymbol = createSymbolFor("string");
+          break;
+        case ts.SyntaxKind.NumberKeyword:
+          typeSymbol = createSymbolFor("number");
           break;
       }
     }
@@ -280,6 +284,9 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
         switch (paramDecl.type.kind) {
           case ts.SyntaxKind.StringKeyword:
             params.push(createProvider(createSymbolFor("string"), isArray));
+            break;
+          case ts.SyntaxKind.NumberKeyword:
+            params.push(createProvider(createSymbolFor("number"), isArray));
             break;
           default:
             params.push(null);
