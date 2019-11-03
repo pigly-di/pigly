@@ -215,6 +215,7 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
     if (ts.isParameter(paramDecl)) {
 
       let paramType = paramDecl.type;
+      let paramName = paramDecl.name;
       let isArray = false;
 
       if (ts.isArrayTypeNode(paramType)) {
@@ -225,12 +226,12 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
       if (ts.isTypeReferenceNode(paramType)) {
         const symbol = typeChecker.getSymbolAtLocation(paramType.typeName);
         const type = typeChecker.getDeclaredTypeOfSymbol(symbol);
-        params.push(createProvider(createSymbolFor(type.symbol.name), isArray));
+        params.push(createProvider(createSymbolFor(type.symbol.name), isArray, paramName.getText()));
 
       } else if (ts.isToken(paramDecl.type)) {
         switch (paramDecl.type.kind) {
           case ts.SyntaxKind.StringKeyword:
-            params.push(createProvider(createSymbolFor("string"), isArray));
+            params.push(createProvider(createSymbolFor("string"), isArray, paramName.getText()));
             break;
           case ts.SyntaxKind.NumberKeyword:
             params.push(createProvider(createSymbolFor("number"), isArray));
@@ -247,22 +248,32 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
   return params;
 }
 
-function createProvider(symbol: ts.CallExpression, isArray: boolean) {
+function createProvider(symbol: ts.CallExpression, isArray: boolean, name?: string) {
 
   let elmt: ts.Expression;
+
+  let args: any = [symbol];
+
+  let undef = ts.createIdentifier("undefined");
+  undef.originalKeywordKind = ts.SyntaxKind.UndefinedKeyword;
+
+  if(name){
+    args.push(undef)
+    args.push(ts.createStringLiteral(name));
+  }
 
   if (isArray) {
     elmt = ts.createCall(
       ts.createPropertyAccess(
         ts.createIdentifier("ctx"), ts.createIdentifier("_resolveAll")),
       undefined,
-      [symbol]);
+      args);
   } else {
     elmt = ts.createCall(
       ts.createPropertyAccess(
         ts.createIdentifier("ctx"), ts.createIdentifier("_resolveFirst")),
       undefined,
-      [symbol]);
+      args);
   }
 
   return ts.createArrowFunction(

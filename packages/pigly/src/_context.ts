@@ -5,5 +5,6 @@ import { Service } from "./_service";
 export interface IContext extends IResolverRoot {
   kernel: IReadOnlyKernel;
   target: Service;
+  name?: string;
   parent?: IContext;
 }

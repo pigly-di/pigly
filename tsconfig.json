@@ -5,7 +5,7 @@
     /* other options */
     "baseUrl": "./packages",
     "paths": {
-      "@robgeoltd/*": ["./*/src"]
+      "@pigly/*": ["./*/src"]
     }
   }
 }

@@ -26,7 +26,7 @@ export class Kernel implements IKernel {
     this._bindings.set(service, bindings);
   }
   /** Resolve the target to providers, execute them and return the results */
-  *resolve<T>(target: Service, parent?: IContext){
+  *resolve<T>(target: Service, parent?: IContext, name?: string) {
     let bindings = this._bindings.get(target);
 
     let _parent = parent;
@@ -41,19 +41,20 @@ export class Kernel implements IKernel {
 
     if (bindings != undefined) {
       for (let binding of bindings) {
-        let ctx: IContext & { _resolveFirst, _resolveAll} = {
+        let ctx: IContext & { _resolveFirst, _resolveAll } = {
           kernel: this,
           target,
           parent,
-          resolve: (service: Service) => this.resolve(service, ctx),
+          name,
+          resolve: (service: Service, parent?: IContext, name?: string) => this.resolve(service, parent || ctx, name),
           /* these are needed to simplify the transformer */
-          _resolveFirst: (service: Service) => first(this.resolve(service, ctx)),
-          _resolveAll: (service: Service) => Array.from(this.resolve(service, ctx))
-        }        
+          _resolveFirst: (service: Service, parent?: IContext, name?: string) => first(this.resolve(service, parent || ctx, name)),
+          _resolveAll: (service: Service, parent?: IContext, name?: string) => Array.from(this.resolve(service, parent || ctx, name))
+        }
         let resolved = binding.provider(ctx);
         if (resolved !== undefined) {
           wasResolved = true;
-          yield resolved;                              
+          yield resolved;
         }
       }
     }
@@ -66,9 +67,9 @@ export class Kernel implements IKernel {
         _parent = _parent.parent;
       };
 
-      let msg = history.reduceRight((p, n) => p +=  " > " + n.toString(), "")
+      let msg = history.reduceRight((p, n) => p += " > " + n.toString(), "")
 
-      throw Error("could not resolve " + target.valueOf().toString() + msg );
+      throw Error("could not resolve " + target.valueOf().toString() + msg);
     }
   }
 

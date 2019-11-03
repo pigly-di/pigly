@@ -6,3 +6,4 @@ export * from './to-const';
 export * from './to-self';
 export * from './to';
 export * from './when';
+export * from './when-all';
