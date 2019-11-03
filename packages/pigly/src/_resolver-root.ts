@@ -1,6 +1,6 @@
-import { Service } from "./_service";
-import { IContext } from "./_context";
+import { IRequest } from "./_request";
+import { IResolution } from "./_resolution";
 
 export interface IResolverRoot {
-  resolve<T>(service: Service, parent?: IContext, name?: string): Iterable<T>;
+  resolve<T>(request: IRequest): IResolution<T>;
 }

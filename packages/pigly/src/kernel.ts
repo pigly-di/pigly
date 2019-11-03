@@ -3,7 +3,9 @@ import { IProvider } from "./_provider";
 import { IBinding } from "./_binding";
 import { IKernel } from "./_kernel";
 import { Service, isService } from "./_service";
-import { first } from "./utils";
+import { IRequest } from "./_request";
+import { IResolution } from "./_resolution";
+
 
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>()
@@ -25,11 +27,28 @@ export class Kernel implements IKernel {
 
     this._bindings.set(service, bindings);
   }
-  /** Resolve the target to providers, execute them and return the results */
-  *resolve<T>(target: Service, parent?: IContext, name?: string) {
-    let bindings = this._bindings.get(target);
 
-    let _parent = parent;
+  resolve<T>(request: IRequest): IResolution<T> {
+    const self = this;
+    return {
+      [Symbol.iterator]() { return self._resolve(request) },
+      toArray: function () {
+        return Array.from(self._resolve(request));
+      },
+      first: function () {
+        for (let item of self._resolve(request)) {
+          if (item !== undefined) return item;
+        }
+      }
+    }
+  }
+
+  /** Resolve the request to bindings and return resolution results */
+  private *_resolve<T>(request: IRequest) {
+    let bindings = this._bindings.get(request.service);
+    let target = request.service;
+
+    let _parent = request.parent;
     while (_parent != undefined) {
       if (_parent.target == target) {
         throw Error("Cyclic Dependency Found.");
@@ -41,15 +60,12 @@ export class Kernel implements IKernel {
 
     if (bindings != undefined) {
       for (let binding of bindings) {
-        let ctx: IContext & { _resolveFirst, _resolveAll } = {
+        let ctx: IContext = {
           kernel: this,
-          target,
-          parent,
-          name,
-          resolve: (service: Service, parent?: IContext, name?: string) => this.resolve(service, parent || ctx, name),
-          /* these are needed to simplify the transformer */
-          _resolveFirst: (service: Service, parent?: IContext, name?: string) => first(this.resolve(service, parent || ctx, name)),
-          _resolveAll: (service: Service, parent?: IContext, name?: string) => Array.from(this.resolve(service, parent || ctx, name))
+          parent: request.parent,
+          target: request.service,
+          name: request.name,
+          resolve: (request: IRequest) => this.resolve(Object.assign({ parent: ctx }, request))
         }
         let resolved = binding.provider(ctx);
         if (resolved !== undefined) {
@@ -61,7 +77,7 @@ export class Kernel implements IKernel {
 
     if (wasResolved == false) {
       let history = [];
-      let _parent = parent;
+      let _parent = request.parent;
       while (_parent != undefined) {
         history.push(_parent.target);
         _parent = _parent.parent;
@@ -69,7 +85,7 @@ export class Kernel implements IKernel {
 
       let msg = history.reduceRight((p, n) => p += " > " + n.toString(), "")
 
-      throw Error("could not resolve " + target.valueOf().toString() + msg);
+      throw Error("could not resolve " + request.service.valueOf().toString() + msg);
     }
   }
 
@@ -79,7 +95,7 @@ export class Kernel implements IKernel {
   get<T>(service: Service): T
   get<T>(service?: Service): T {
     if (isService(service) == false) throw Error('called "get" without a service');
-    return first(this.resolve<T>(service));
+    return this.resolve<T>({ service }).first();
   }
 
   /** REQUIRES TRANSFORMER - resolve an interface to a value array */
@@ -88,6 +104,6 @@ export class Kernel implements IKernel {
   getAll<T>(service: Service): T[]
   getAll<T>(service?: Service): T[] {
     if (isService(service) == false) throw Error('called "getAll" without a service');
-    return Array.from(this.resolve<T>(service));
+    return this.resolve<T>({ service }).toArray();
   }
 }

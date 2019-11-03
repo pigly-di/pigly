@@ -8,5 +8,5 @@ export function to<T>(): IProvider<T>
 export function to<T>(service: Service): IProvider<T>
 export function to<T>(service?: Service): IProvider<T> {
   if (!isService(service)) throw Error('called "to" without a service symbol');
-  return (ctx) => first(ctx.resolve<T>(service));
+  return (ctx) => ctx.resolve<T>({service}).first();
 }

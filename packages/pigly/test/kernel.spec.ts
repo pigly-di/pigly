@@ -75,7 +75,7 @@ describe("Kernel Basics", () => {
 
     let result = [];
     
-    for(let item of kernel.resolve($IFoo)){
+    for(let item of kernel.resolve({service:$IFoo})){
       result.push(item);
     }
 

@@ -7,5 +7,5 @@ export function toAll<T>(): IProvider<T[]>
 export function toAll<T>(service: Service): IProvider<T[]>
 export function toAll<T>(service?: Service): IProvider<T[]> {
   if (!isService(service)) throw Error('called "toAll" without a service symbol');
-  return (ctx) => Array.from(ctx.resolve<T>(service));
+  return (ctx) => ctx.resolve<T>({ service }).toArray();
 }

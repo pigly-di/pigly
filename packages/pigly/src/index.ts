@@ -7,6 +7,8 @@ export * from './_kernel';
 export * from './_newable';
 export * from './_provider';
 export * from './_read-only-kernel';
+export * from './_request';
+export * from './_resolution';
 export * from './_resolver-root';
 export * from './_service';
 

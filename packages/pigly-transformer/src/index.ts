@@ -249,32 +249,26 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
 }
 
 function createProvider(symbol: ts.CallExpression, isArray: boolean, name?: string) {
+  let props: ts.ObjectLiteralElementLike[] = [
+    ts.createPropertyAssignment("service", symbol)
+  ]
 
-  let elmt: ts.Expression;
-
-  let args: any = [symbol];
-
-  let undef = ts.createIdentifier("undefined");
-  undef.originalKeywordKind = ts.SyntaxKind.UndefinedKeyword;
-
-  if(name){
-    args.push(undef)
-    args.push(ts.createStringLiteral(name));
+  if (name) {
+    props.push(
+      ts.createPropertyAssignment("name", ts.createStringLiteral(name))
+    )
   }
 
-  if (isArray) {
-    elmt = ts.createCall(
+  let request = ts.createObjectLiteral(props);
+  let deref = (isArray) ? "toArray" : "first";
+
+  let elmt = ts.createCall(
       ts.createPropertyAccess(
-        ts.createIdentifier("ctx"), ts.createIdentifier("_resolveAll")),
-      undefined,
-      args);
-  } else {
-    elmt = ts.createCall(
-      ts.createPropertyAccess(
-        ts.createIdentifier("ctx"), ts.createIdentifier("_resolveFirst")),
-      undefined,
-      args);
-  }
+        ts.createCall(
+          ts.createPropertyAccess(
+            ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
+          undefined,
+          [request]), ts.createIdentifier(deref)), undefined, []);
 
   return ts.createArrowFunction(
     undefined,
