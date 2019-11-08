@@ -1,6 +1,5 @@
 import { IProvider } from "../_provider";
 import { isService, Service } from "../_service";
-import { first } from "../utils";
 
 /** REQUIRES TRANSFORMER - create a provider that resolves to another type */
 export function to<T>(): IProvider<T>
