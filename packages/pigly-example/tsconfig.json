@@ -5,6 +5,9 @@
     "moduleResolution": "node",
     "plugins": [{
       "transform": "@pigly/transformer"
+    },
+    {
+      "transform": "ts-auto-mock/transformer"
     }]
   }
 }
