@@ -5,16 +5,9 @@ Vue.config.productionTip = false
 
 import { Kernel, toClass, toConst, toSelf, injectedInto, when, to } from 'pigly';
 import { IFoo } from './service/_foo';
+import { Foo } from './service/foo';
 
 let kernel = new Kernel();
-
-class Foo implements IFoo {
-  constructor(public message: string) {
-    setInterval(
-      () => this.message = message + " " +
-        Math.random().toString(), 100);
-  }
-}
 
 kernel.bind<IFoo>(to<Foo>());
 kernel.bind<Foo>(toSelf(Foo))
