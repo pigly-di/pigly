@@ -174,6 +174,10 @@ function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeCh
   const ctorArg = node.arguments[0];
   const type = typeChecker.getTypeAtLocation(ctorArg);
 
+  if(type.symbol == undefined){
+    throw Error(`class constructor cannot be located - use explicit providers or disable transpileOnly`);
+  }
+
   if (type.symbol.valueDeclaration != null) {
     let ctors = getClassConstructSignatures(type as ts.InterfaceType, typeChecker);
 
