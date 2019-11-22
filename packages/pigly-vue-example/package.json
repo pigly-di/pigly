@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@pigly/transformer": "^0.6.0",
-    "@vue/cli-plugin-typescript": "^3.11.0",
+    "@vue/cli-plugin-typescript": "^4.0.5",
     "@vue/cli-service": "^4.0.5",
     "node-sass": "^4.9.0",
     "sass-loader": "^8.0.0",
