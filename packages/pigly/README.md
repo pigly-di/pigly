@@ -132,7 +132,7 @@ kernel.bind(A, toClass(Foo, to(B)))
 a more explicit way to provide a constant
 
 ```ts
-kernel.bind(B, toConst("hello world));
+kernel.bind(B, toConst("hello world"));
 ```
 
 ### asSingleton(provider)
