@@ -74,8 +74,8 @@ describe("Kernel Basics", () => {
     kernel.bind($IFoo, _ => 11);
 
     let result = [];
-    
-    for(let item of kernel.resolve({service:$IFoo})){
+
+    for (let item of kernel.resolve({ service: $IFoo })) {
       result.push(item);
     }
 
@@ -87,7 +87,7 @@ describe("Kernel Basics", () => {
 
     const A = Symbol.for("A");
 
-    kernel.bind(A, _=> undefined);
+    kernel.bind(A, _ => undefined);
     kernel.bind(A, toConst("hello"));
 
     let result = kernel.get(A);
@@ -100,14 +100,14 @@ describe("Kernel Basics", () => {
 
     const A = Symbol.for("A");
 
-    kernel.bind(A, _=> undefined);
+    kernel.bind(A, _ => undefined);
     kernel.bind(A, toConst("hello"));
-    kernel.bind(A, _=>{throw Error("should not be called")});
+    kernel.bind(A, _ => { throw Error("should not be called") });
 
     let result = kernel.get(A);
 
     expect(result).to.be.eq("hello");
-  })  
+  })
 })
 
 describe("Resolving Context", () => {
@@ -157,8 +157,8 @@ describe("Resolving Context", () => {
 
     const A = Symbol.for("A");
 
-    kernel.bind(A, _=>undefined);
-    
+    kernel.bind(A, _ => undefined);
+
     expect(() => {
       kernel.get(A);
     }).throws("could not resolve Symbol(A)");

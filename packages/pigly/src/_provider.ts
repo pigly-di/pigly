@@ -6,5 +6,5 @@ export interface IProvider<T> {
 
 export type ProviderWrap<T> = T extends any[]
   ? {
-    [P in keyof T]?: IProvider<T[P]>;
+    [P in keyof T]: IProvider<T[P]>;
   } : [];
