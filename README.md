@@ -44,7 +44,7 @@ let kernel = new Kernel();
 
 kernel.bind(Symbol.for("Foo"), (ctx)=>{ return "foo" });
 
-let foo = kernel.get(Symbol.for("Foo));
+let foo = kernel.get(Symbol.for("Foo"));
 ```
 
 ### .bind(symbol, provider)
@@ -132,7 +132,7 @@ kernel.bind(A, toClass(Foo, to(B)))
 a more explicit way to provide a constant
 
 ```ts
-kernel.bind(B, toConst("hello world));
+kernel.bind(B, toConst("hello world"));
 ```
 
 ### asSingleton(provider)
