@@ -1129,7 +1129,7 @@
     webpack-dev-server "^3.9.0"
     webpack-merge "^4.2.2"
 
-"@vue/cli-shared-utils@^4.0.5", "@vue/cli-shared-utils@^4.1.1":
+"@vue/cli-shared-utils@^4.1.1":
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/@vue/cli-shared-utils/-/cli-shared-utils-4.1.1.tgz#79e26b56fda185fda00e5787a8f4aac56757b123"
   integrity sha512-nsxNW8Sy9y2yx/r9DqgZoYg/DoygvASIQl0XXG+imQUDWEXKmD6UZA6y5ANfStCljzZ/wd7WgWP+txmjy6exOw==
@@ -9397,9 +9397,9 @@ tryer@^1.0.1:
   integrity sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA==
 
 ts-auto-mock@^1.2.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.3.1.tgz#d2edbc6a58dfb7b119900787ae3ffb3a2ca329ee"
-  integrity sha512-apajsh7zmnUKV4FEwbZqfg0KzlAZpKbqiwMvjod/1foaq9IJXb6V08tHY83MwdcfbjIYHwIgGEjLTXWq9gq5RA==
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.4.0.tgz#0818104bb8a61717fc2df0e3dd94db92ed9ddad6"
+  integrity sha512-WQsOTHHzN+jtk859850vzpg5BCmOWrYUs8P2ZkUuIhLJlWldCAI01HMmAq0k6BZBDn5xIF+/dxB9aim42u6w3w==
   dependencies:
     lodash-es "^4.17.15"
     url-slug "^2.2.0"
