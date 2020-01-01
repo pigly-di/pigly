@@ -9392,12 +9392,11 @@ tryer@^1.0.1:
   integrity sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA==
 
 ts-auto-mock@^1.2.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.4.1.tgz#c5cc09979e6640fda624a8ba954659d24f32536c"
-  integrity sha512-wYKxi/X0qQM6dFvkZKFaMWi4LToe7oJGlicUrRBppse1M+K33TnMXCmstLXoQl/KqpBHJ8HxsCZ7yqIgcJLaJA==
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.4.3.tgz#4e552a29c11b1396f707ca528f0295ffd5159eb4"
+  integrity sha512-zzQ6pdflj3d+9pbYM0Wc7vmSp7PzSFgs8gJmNxcw8Tw35mL6e4KTkUkk4vTWVO0IHP5SYRD5bmUp+ABopULWQA==
   dependencies:
     lodash-es "^4.17.15"
-    url-slug "^2.2.0"
     winston "^3.2.1"
 
 ts-loader@^6.2.1:
@@ -9541,11 +9540,6 @@ umask@^1.1.0:
   resolved "https://registry.yarnpkg.com/umask/-/umask-1.1.0.tgz#f29cebf01df517912bb58ff9c4e50fde8e33320d"
   integrity sha1-8pzr8B31F5ErtY/5xOUP3o4zMg0=
 
-unidecode@^0.1.8:
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/unidecode/-/unidecode-0.1.8.tgz#efbb301538bc45246a9ac8c559d72f015305053e"
-  integrity sha1-77swFTi8RSRqmsjFWdcvAVMFBT4=
-
 union-value@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/union-value/-/union-value-1.0.1.tgz#0b6fe7b835aecda61c6ea4d4f02c14221e109847"
@@ -9648,13 +9642,6 @@ url-parse@^1.4.3:
   dependencies:
     querystringify "^2.1.1"
     requires-port "^1.0.0"
-
-url-slug@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/url-slug/-/url-slug-2.2.0.tgz#b657b49d5b4716d935ebb35048fc18cbf27b600e"
-  integrity sha512-wHxRBFkyseL0xKS+EogZ1NOKjb3e3VmYeeG/Jq8zyVa47HsGvvf3NPLB4euFgz7iRGWBUqWgYVIXLjzOU0OQ5Q==
-  dependencies:
-    unidecode "^0.1.8"
 
 url-template@^2.0.8:
   version "2.0.8"
