@@ -18,7 +18,24 @@ describe("kernel", () => {
     let a = kernel.get<A>();
 
     expect(a.b.message).to.be.eq("hello");
-  })  
+  }) 
+
+  it("can bind generic interface", () => {
+    const kernel = new Kernel();
+
+    interface A<T>{}
+    interface B{}
+    interface C{}
+
+    kernel.bind<A<B>>(toConst("AB"));
+    kernel.bind<A<C>>(toConst("AC"));
+
+    let ab = kernel.get<A<B>>();
+    let ac = kernel.get<A<C>>();
+
+    expect(ab).to.be.eq("AB");
+    expect(ac).to.be.eq("AC");
+  })   
 
   it("can bind imported interface", () => {
     const kernel = new Kernel();
