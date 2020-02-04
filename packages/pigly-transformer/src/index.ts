@@ -37,29 +37,13 @@ function visitNode(node: ts.Node, program: ts.Program) {
       if (!methodName) return node;
 
       if (methodName == "SymbolFor") {
-
-        //console.log("Transforming SymbolFor", node.typeArguments[0]);
-
-        if (!node.typeArguments) {
-          throw new Error("No type arguments provided to `InterfaceSymbol<T>()`.");
-        }
-        let arg = node.typeArguments[0];
-
-        if (ts.isIdentifier(arg)) {
-          return createSymbolFor(arg.escapedText.toString());
-        }
-        if (ts.isTypeReferenceNode(arg)) {
-          return createSymbolFor(arg.typeName.getText());
-        }
+        return createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);       
       }
 
       if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto" || methodName == "hasAncestor") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
         return createCallWithInjectedSymbol(node, typeChecker);
       }
 
-      //if ((methodName == "toClass" && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
-      //  return createCtorCallWithInjectedProviders(node, typeChecker);
-      //}
       if ((methodName == "toSelf" && methodArgs.length == 1)) {
         return createSelfCtorCallWithInjectedProviders(node, typeChecker);
       }
@@ -102,19 +86,16 @@ function createSymbolFor(escapedName: string) {
   return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(escapedName)]);
 }
 
-
-function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
-
-  //const type = typeChecker.getTypeFromTypeNode(typeArgument);
-  //console.log("Identifier", typeArgument);
-
+function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker){
   let typeSymbol: ts.CallExpression;
 
   if (node.typeArguments && node.typeArguments[0]) {
     const typeArgument = node.typeArguments[0];
 
     if (ts.isTypeReferenceNode(typeArgument)) {
-      typeSymbol = createSymbolFor(typeArgument.getFullText());
+      /** crude brute-force escaping of the type argument */
+      let typeString = typeArgument.getText().replace(/\s/g, '');
+      typeSymbol = createSymbolFor(typeString);
     }
     else if (ts.isToken(typeArgument)) {
       switch (typeArgument.kind) {
@@ -131,7 +112,7 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
     let typeArgument = inferTypeArguments(node, typeChecker);
 
     if (typeArgument && typeArgument[0]) {
-      typeSymbol = createSymbolFor(typeArgument[0].symbol.name);
+      typeSymbol = createSymbolFor(typeArgument[0].symbol.escapedName.toString());
     }
 
     /*if (ts.isTypeReferenceNode(typeArgument)) {
@@ -144,6 +125,18 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
       }
     }*/
   }
+
+  return typeSymbol;
+}
+
+
+function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
+
+  //const type = typeChecker.getTypeFromTypeNode(typeArgument);
+  //console.log("Identifier", typeArgument);
+
+  let typeSymbol = createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);
+
 
 
   if (typeSymbol !== undefined) {

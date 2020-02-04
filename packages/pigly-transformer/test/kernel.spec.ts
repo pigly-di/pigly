@@ -35,6 +35,22 @@ describe("kernel", () => {
 
     expect(ab).to.be.eq("AB");
     expect(ac).to.be.eq("AC");
+  })  
+  it("can bind generic interface, regardless of formatting", () => {
+    const kernel = new Kernel();
+
+    interface A<T>{}
+    interface B{}
+    interface C{}
+
+    kernel.bind<  A   <     B>>(toConst("AB"));
+    kernel.bind<A<  C>>(toConst("AC"));
+
+    let ab = kernel.get<A   < B>>();
+    let ac = kernel.get<A < C  >>();
+
+    expect(ab).to.be.eq("AB");
+    expect(ac).to.be.eq("AC");
   })   
 
   it("can bind imported interface", () => {
