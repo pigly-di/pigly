@@ -24,7 +24,7 @@
     "pigly": "^0.8.0",
     "source-map-support": "^0.5.12",
     "ttypescript": "^1.5.6",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",

@@ -1,21 +1,16 @@
-const pigly = require('@pigly/transformer').default;
-
-const transformers = (program) => {
-  return {
-    before: [pigly(program)]
-  }
-}
-
+const getCustomTransformers = __dirname + "/transformers.js";
 
 module.exports = {
   chainWebpack: config => {
-    config.module
+    /**workaround: either disable parallel or move getCustomTransformers to a separate file */
+    parallel: false,
+    config.module      
       .rule('ts')
       .use('ts-loader')
       .loader('ts-loader')
       .tap(options => {
         // modify the options...
-        return { ...options, transpileOnly: false, getCustomTransformers: transformers, logLevel: "info" };
+        return { ...options, transpileOnly: true, getCustomTransformers };
       })
   }
 }
