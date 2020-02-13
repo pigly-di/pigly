@@ -14,8 +14,8 @@
   },
   "devDependencies": {
     "@pigly/transformer": "^0.8.0",
-    "@vue/cli-plugin-typescript": "^4.0.5",
-    "@vue/cli-service": "^4.0.5",
+    "@vue/cli-plugin-typescript": "^4.2.2",
+    "@vue/cli-service": "^4.2.2",
     "node-sass": "^4.9.0",
     "sass-loader": "^8.0.0",
     "typescript": "^3.5.3",
@@ -29,5 +29,8 @@
   "browserslist": [
     "> 1%",
     "last 2 versions"
-  ]
+  ],
+  "workspaces": {
+    "nohoist": ["@vue*/**" ]
+  }
 }
