@@ -201,7 +201,7 @@ returns true if an request ancestor is equal to the symbol.
 
 ## Transformer Usage
 
-with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/tree/develop/packages/pigly-transformerr) you are able to omit manually creating a symbol. Currently 
+with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/tree/develop/packages/pigly-transformer) you are able to omit manually creating a symbol. Currently 
 
 * `.bind<T>(provider)` 
 * `.get<T>()`
