@@ -101,7 +101,7 @@ used to resolve a symbol to all its bindings
 
 ```ts
 const A = Symbol.for("A")
-const B = Symbol.for("A");
+const B = Symbol.for("B");
 
 kernel.bind(A, _ => "hello");
 kernel.bind(A, _ => "world");
