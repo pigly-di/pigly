@@ -271,7 +271,7 @@ function createProvider(symbol: ts.CallExpression, isArray: boolean, name?: stri
     undefined,
     undefined,
     [
-      ts.createParameter([], [], null, 'ctx', null, ts.createTypeReferenceNode('any', []))
+      ts.createParameter([], [], undefined, 'ctx', undefined, ts.createTypeReferenceNode('any', []))
     ],
     undefined,
     undefined,

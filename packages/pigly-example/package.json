@@ -12,6 +12,6 @@
     "ts-auto-mock": "^1.2.1",
     "ts-node": "^8.4.1",
     "ttypescript": "^1.5.7",
-    "typescript": "^3.5.0"
+    "typescript": "^3.8.3"
   }
 }
