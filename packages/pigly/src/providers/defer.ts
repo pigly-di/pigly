@@ -2,6 +2,17 @@ import { IContext } from "../_context";
 import { IProvider } from "../_provider";
 import { Service } from "../_service";
 
+
+let __setImmediate;
+
+if (global && global.setImmediate) {
+  __setImmediate = global.setImmediate;
+} else {
+  __setImmediate = function (cb, ...args) {
+    return setTimeout(cb, 0, ...args);
+  };
+}
+
 /** 
  * 
  * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
@@ -9,7 +20,7 @@ export function defer<T>(provider: IProvider<T>, inject: { [field: string]: Serv
   return (ctx: IContext) => {
     let kernel = ctx.kernel;
     let resolved = provider(ctx);
-    setImmediate(() => {
+    __setImmediate(() => {
       for (let [key, target] of entries(inject)) {
         resolved[key] = kernel.get(target);
       }
