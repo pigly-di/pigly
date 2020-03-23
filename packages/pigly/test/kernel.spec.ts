@@ -283,7 +283,7 @@ describe("Deferred Injection", () => {
     const $Bar = Symbol.for("Bar");
 
     kernel.bind($Foo, asSingleton(toClass(Foo, to($Bar))));
-    kernel.bind($Bar, asSingleton(defer(toClass(Bar), { foo: $Foo })));
+    kernel.bind($Bar, asSingleton(defer(toClass(Bar), { foo: to($Foo) })));
 
     let foo = kernel.get<Foo>($Foo);
     let bar = kernel.get<Bar>($Bar);

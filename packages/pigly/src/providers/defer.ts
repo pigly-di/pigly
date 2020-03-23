@@ -1,7 +1,7 @@
 import { IContext } from "../_context";
 import { IProvider } from "../_provider";
 import { Service } from "../_service";
-
+import { IRequest } from "../_request";
 
 let __setImmediate;
 
@@ -13,28 +13,28 @@ if (global && global.setImmediate) {
   };
 }
 
+export type DeferFieldProviders<T> = {
+  [P in keyof T]?: IProvider<T[P]>
+}
+
 /** 
  * 
  * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
-export function defer<T>(provider: IProvider<T>, inject: { [field: string]: Service }) {
+export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>) {
   return (ctx: IContext) => {
     let kernel = ctx.kernel;
     let resolved = provider(ctx);
     __setImmediate(() => {
-      for (let [key, target] of entries(inject)) {
-        resolved[key] = kernel.get(target);
+      for (let [key, provider] of Object.entries(inject)) {
+        let _ctx: IContext = {
+          kernel,
+          target: ctx.target,
+          name: key,
+          resolve: (request: IRequest) => kernel.resolve(Object.assign({ parent: _ctx }, request))
+        }
+        resolved[key] = (provider as any)(_ctx);
       }
     })
     return resolved;
   };
 }
-
-function entries(obj: { [field: string]: Service }): Array<[string, Service]> {
-  var ownProps = Object.keys(obj),
-    i = ownProps.length,
-    resArray = new Array(i); // preallocate the Array
-  while (i--)
-    resArray[i] = [ownProps[i], obj[ownProps[i]]];
-
-  return resArray;
-};
