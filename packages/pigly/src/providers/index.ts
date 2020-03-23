@@ -1,5 +1,6 @@
 export * from './as-singleton';
 export * from './defer';
+export * from './maybe';
 export * from './to-all';
 export * from './to-class';
 export * from './to-const';
