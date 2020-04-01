@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.6",
+    "@types/mocha": "^7.0.2",
     "@types/node": "^12.12.11",
     "chai": "^4.2.0",
     "codecov": "^3.5.0",
