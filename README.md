@@ -163,6 +163,43 @@ kernel.bind(C, when(x=>x.parent.target == A, toConst("a")));
 kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
 ```
 
+## defer(provider, opts: {[field] : provider})
+Used to defer injection (lazy injection) into the created object. This allows you to work around cyclic dependencies, by having one of them lazy inject into the other. You MUST be careful to ensure you're injecting constants or singletons, otherwise you can still cause a cyclic-loop. 
+
+```
+class Foo {
+  constructor(public bar: Bar) { }
+}
+
+class Bar {
+  foo: Foo;
+  constructor() { }
+}
+
+const $Foo = Symbol.for("Foo");
+const $Bar = Symbol.for("Bar");
+
+kernel.bind($Foo, 
+  /* IMPORTANT */
+  asSingleton(
+    toClass(Foo, to($Bar))
+  ));
+    
+kernel.bind($Bar, 
+  /* IMPORTANT */
+  asSingleton(   
+    defer(
+      toClass(Bar),
+      {
+        foo: to($Foo)
+      }
+    )));
+
+let foo = kernel.get<Foo>($Foo);
+let bar = kernel.get<Bar>($Bar);
+```
+
+
 ## Predicates
 
 ### injectedInto(symbol)
