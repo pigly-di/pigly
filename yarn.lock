@@ -9569,9 +9569,9 @@ tryer@^1.0.1:
   integrity sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA==
 
 ts-auto-mock@^1.2.1:
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.4.3.tgz#4e552a29c11b1396f707ca528f0295ffd5159eb4"
-  integrity sha512-zzQ6pdflj3d+9pbYM0Wc7vmSp7PzSFgs8gJmNxcw8Tw35mL6e4KTkUkk4vTWVO0IHP5SYRD5bmUp+ABopULWQA==
+  version "1.5.7"
+  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-1.5.7.tgz#e7899b19da72825d9584210a3106c2b23fb03e25"
+  integrity sha512-R9Uth2tx12MtzGA5w+Ag8HM5znn9U+GDdFNiZccB024MXBRmYqjcOUFAQF/pDzyKgwrhq1w/uktpgrwpvEHzoA==
   dependencies:
     lodash-es "^4.17.15"
     winston "^3.2.1"
