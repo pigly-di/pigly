@@ -163,7 +163,7 @@ kernel.bind(C, when(x=>x.parent.target == A, toConst("a")));
 kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
 ```
 
-## defer(provider, opts: {[field] : provider})
+### defer(provider, opts: {[field] : provider})
 Used to defer injection (lazy injection) into the created object. This allows you to work around cyclic dependencies, by having one of them lazy inject into the other. You MUST be careful to ensure you're injecting constants or singletons, otherwise you can still cause a cyclic-loop. 
 
 ```
