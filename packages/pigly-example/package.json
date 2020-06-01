@@ -1,12 +1,12 @@
 {
   "name": "example",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "private": true,
   "dependencies": {
-    "pigly": "^0.9.1"
+    "pigly": "^0.10.0"
   },
   "devDependencies": {
-    "@pigly/transformer": "^0.9.1",
+    "@pigly/transformer": "^0.10.0",
     "@types/sinon": "^9.0.4",
     "sinon": "^7.5.0",
     "ts-auto-mock": "^1.2.1",
