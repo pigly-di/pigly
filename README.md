@@ -3,8 +3,6 @@ unobtrusive, manually configured, dependency-injection for javascript/typescript
 
 ![alt](https://avatars0.githubusercontent.com/u/50213493?s=400&u=65942b405a979397a2c358366db85c3d06f521f5&v=4)
 
-⚠️⚠️ WARNING: experimental - lock to minor versions ⚠️⚠️
-
 ![CircleCI](https://img.shields.io/circleci/build/github/pigly-di/pigly?token=abc123def456) ![npm](https://img.shields.io/npm/v/pigly) ![npm](https://img.shields.io/npm/dm/pigly) ![Codecov](https://img.shields.io/codecov/c/gh/pigly-di/pigly)
 
 
@@ -15,15 +13,27 @@ unobtrusive, manually configured, dependency-injection for javascript/typescript
 pigly is a simple helper to manually configure a DI container to bind symbols to providers. It explicitly avoids decorators, or any other changes to existing code, and on its own doesn't require any other dependency / compilation-step to work. However, when combined with the typescript transformer `@pigly/transformer` we can reduce the amount of boiler-plate and simply describe the bindings as: 
 
 ```ts
+interface INinja {
+  weapon: IWeapon;
+}
+interface IWeapon {
+  name: string;
+}
+
+class Ninja implements INinja {
+  constructor(public weapon: IWeapon) { }
+}
+
+class Axe implements IWeapon {
+  name = "axe";
+}
+
 let kernel = new Kernel();
 
-kernel.bind(toSelf(Foo));
-kernel.bind(toSelf(Bar));
+kernel.bind<INinja>(toSelf(Ninja));
+kernel.bind<IWeapon>(toSelf(Axe));
 
-kernel.bind<IFoo>(to<Foo>());
-kernel.bind<IBar>(to<Bar>());
-
-let foo = kernel.get<IFoo>();
+let ninja = kernel.get<INinja>();
 ```
 
 ## Planned features

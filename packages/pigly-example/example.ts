@@ -17,13 +17,11 @@ class Axe implements IWeapon {
 
 let kernel = new Kernel();
 
-kernel.bind(toSelf(Ninja));
-kernel.bind(toSelf(Axe));
-
-kernel.bind<INinja>(to<Ninja>());
-kernel.bind<IWeapon>(to<Axe>());
+kernel.bind<INinja>(toSelf(Ninja));
+kernel.bind<IWeapon>(toSelf(Axe));
 
 let ninja = kernel.get<INinja>();
 
-console.log(ninja);
+console.log("ninja", ninja);
 
+//call with: ts-node --compiler ttypescript example-mock.ts
