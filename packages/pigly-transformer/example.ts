@@ -1,28 +1,24 @@
-import { Kernel, toConst, toSelf, whenAll, named, injectedInto } from 'pigly';
+import { Kernel, toConst, toSelf, whenAll, named, injectedInto, toClass, to } from 'pigly';
 
 
 class Foo {
-  constructor(public a: string, public b: string) { }
+  constructor(bar: IBar) { }
 }
+
+interface IFoo {
+}
+
+interface IBar{
+
+}
+
+class Bar implements IBar{}
 
 function main() {
   let kernel = new Kernel();
-
-  kernel.bind<string>(
-    whenAll([
-      injectedInto<Foo>(),
-      named("a")
-    ], toConst("foo")));
-
-  kernel.bind<string>(
-    whenAll([
-      injectedInto<Foo>(),
-      named("b")
-    ], toConst("bar")));
-
-  kernel.bind(toSelf(Foo));
-
-  console.log(kernel.get<Foo>());
+  kernel.bind<IBar>(toClass(Bar));
+  kernel.bind<IFoo>(toClass(Foo, to<IBar>()));
+  console.log(kernel.get<IFoo>());
 }
 
 console.log(main.toString());

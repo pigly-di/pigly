@@ -1,67 +1,10 @@
 import * as ts from 'typescript';
-/*import * as crypto from 'crypto';
-function hash(str: string): string {
-  const h = crypto.createHash('sha256');
 
-  h.update(str);
-
-  return h.digest('hex');
-}
-*/
-
-//import * as hash from 'object-hash';
-
-function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
+/*function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
   return ts.visitEachChild(visitNode(node, program), childNode => visitNodeAndChildren(childNode, program, context), context);
-}
+}*/
 
-function visitNode(node: ts.Node, program: ts.Program) {
-  const typeChecker = program.getTypeChecker();
 
-  //if (ts.isImportDeclaration(node)) {
-  //  console.log("IMPORT", node);
-  //}
-
-  ////if(ts.isVariableDeclaration(node)){
-  //console.log("VARIABLE:", node);
-  //}
-
-  if (ts.isCallExpression(node)) {
-    let methodArgs = node.arguments;
-    let typeArgs = node.typeArguments;
-    let methodName = undefined;
-
-    if (ts.isIdentifier(node.expression)) {
-      methodName = node.expression.escapedText.toString();
-
-      if (!methodName) return node;
-
-      if (methodName == "SymbolFor") {
-        return createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);       
-      }
-
-      if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto" || methodName == "hasAncestor") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
-        return createCallWithInjectedSymbol(node, typeChecker);
-      }
-
-      if ((methodName == "toSelf" && methodArgs.length == 1)) {
-        return createSelfCtorCallWithInjectedProviders(node, typeChecker);
-      }
-    }
-    else if (ts.isPropertyAccessExpression(node.expression)) {
-      methodName = node.expression.name.escapedText.toString()
-
-      if ((methodName == "bind" && methodArgs.length == 1)) {
-        return createCallWithInjectedSymbol(node, typeChecker);
-      }
-      if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
-        return createCallWithInjectedSymbol(node, typeChecker);
-      }
-    }
-  }
-
-  return node;
-}
 
 /*function createSymbolFor(type: ts.Type, typeChecker: ts.TypeChecker) {
   const symbol = type.symbol;
@@ -83,10 +26,21 @@ function visitNode(node: ts.Node, program: ts.Program) {
 }*/
 
 function createSymbolFor(escapedName: string) {
-  return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(escapedName)]);
+  return ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createIdentifier('Symbol'),
+      ts.factory.createIdentifier('for')
+    ),
+    [],
+    [
+      ts.factory.createStringLiteral(escapedName)
+    ]
+  )
+
+  // return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(escapedName)]);
 }
 
-function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker){
+function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker) {
   let typeSymbol: ts.CallExpression;
 
   if (node.typeArguments && node.typeArguments[0]) {
@@ -130,9 +84,9 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
 }
 
 
-function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, ...appendedParams: ts.Expression[]) {
+function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.TypeChecker, visit:(node: ts.Node)=>ts.Node) {
 
-  //const type = typeChecker.getTypeFromTypeNode(typeArgument);
+ // const type = typeChecker.getTypeFromTypeNode(typeArgument);
   //console.log("Identifier", typeArgument);
 
   let typeSymbol = createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);
@@ -144,13 +98,19 @@ function createCallWithInjectedSymbol(node: ts.CallExpression, typeChecker: ts.T
 
     args.push(typeSymbol);
     for (let arg of node.arguments) {
-      args.push(arg);
+      args.push(visit(arg));
     }
-    args.push(...appendedParams);
+    //args.push(...appendedParams);
 
-    const nodeResult = ts.getMutableClone(node);
+    //const nodeResult = ts.getMutableClone(node);
 
-    nodeResult.arguments = ts.createNodeArray<ts.Expression>(args);
+    // nodeResult.arguments = ts.createNodeArray<ts.Expression>(args);
+
+    const nodeResult = ts.factory.createCallExpression(
+      node.expression,
+      null,
+      args
+    )
 
     //console.log("injected Symbol into call expression: ", node.getText() )
 
@@ -167,7 +127,7 @@ function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeCh
   const ctorArg = node.arguments[0];
   const type = typeChecker.getTypeAtLocation(ctorArg);
 
-  if(type.symbol == undefined){
+  if (type.symbol == undefined) {
     throw Error(`class constructor cannot be located - use explicit providers or disable transpileOnly`);
   }
 
@@ -182,16 +142,21 @@ function createSelfCtorCallWithInjectedProviders(node: ts.CallExpression, typeCh
       throw Error(`class ${type.symbol.name}'s constructor cannot be inferred - use explicit providers`);
     }
 
+    const nodeResult = ts.factory.createCallExpression(
+      node.expression,
+      [],
+      [node.arguments[0], ...providerCalls]
+    )
 
-    const nodeResult = ts.getMutableClone(node);
+    //const nodeResult = ts.getMutableClone(node);
 
     //console.log(typeArgument);
 
-    nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
-    nodeResult.arguments = ts.createNodeArray<ts.Expression>([
-      node.arguments[0],
-      , ...providerCalls
-    ]);
+    //nodeResult.typeArguments = ts.createNodeArray<ts.TypeNode>();
+    // nodeResult.arguments = ts.createNodeArray<ts.Expression>([
+    // node.arguments[0],
+    // , ...providerCalls
+    //]);
     return nodeResult;
   }
 
@@ -247,31 +212,31 @@ function getConstructorProviders(ctor: ts.Signature, typeChecker: ts.TypeChecker
 
 function createProvider(symbol: ts.CallExpression, isArray: boolean, name?: string) {
   let props: ts.ObjectLiteralElementLike[] = [
-    ts.createPropertyAssignment("service", symbol)
+    ts.factory.createPropertyAssignment("service", symbol)
   ]
 
   if (name) {
     props.push(
-      ts.createPropertyAssignment("name", ts.createStringLiteral(name))
+      ts.factory.createPropertyAssignment("name", ts.factory.createStringLiteral(name))
     )
   }
 
-  let request = ts.createObjectLiteral(props);
+  let request = ts.factory.createObjectLiteralExpression(props);
   let deref = (isArray) ? "toArray" : "first";
 
-  let elmt = ts.createCall(
-      ts.createPropertyAccess(
-        ts.createCall(
-          ts.createPropertyAccess(
-            ts.createIdentifier("ctx"), ts.createIdentifier("resolve")),
-          undefined,
-          [request]), ts.createIdentifier(deref)), undefined, []);
+  let elmt = ts.factory.createCallExpression(
+    ts.factory.createPropertyAccessExpression(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createIdentifier("ctx"), ts.factory.createIdentifier("resolve")),
+        undefined,
+        [request]), ts.factory.createIdentifier(deref)), undefined, []);
 
-  return ts.createArrowFunction(
+  return ts.factory.createArrowFunction(
     undefined,
     undefined,
     [
-      ts.createParameter([], [], undefined, 'ctx', undefined, ts.createTypeReferenceNode('any', []))
+      ts.factory.createParameterDeclaration([], [], undefined, 'ctx', undefined, ts.createTypeReferenceNode('any', []))
     ],
     undefined,
     undefined,
@@ -298,42 +263,84 @@ type TypeMapper =
   | { kind: TypeMapKind.Composite | TypeMapKind.Merged, mapper1: TypeMapper, mapper2: TypeMapper };
 
 
-function typeMapper(mapper:TypeMapper, source: ts.Type): ts.Type {
-  switch(mapper.kind){
-    case TypeMapKind.Simple: 
+function typeMapper(mapper: TypeMapper, source: ts.Type): ts.Type {
+  switch (mapper.kind) {
+    case TypeMapKind.Simple:
       return mapper.target;
     case TypeMapKind.Array:
       throw Error("not implemented");
-    case TypeMapKind.Function: 
-      return mapper.func(source);      
-    case TypeMapKind.Composite: 
+    case TypeMapKind.Function:
+      return mapper.func(source);
+    case TypeMapKind.Composite:
     case TypeMapKind.Merged:
       return typeMapper(mapper.mapper2, source);
   }
 }
 
 function inferTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker): ts.Type[] {
-  const signature:ts.Signature = typeChecker.getResolvedSignature(node);
+  const signature: ts.Signature = typeChecker.getResolvedSignature(node);
   const targetParams: ts.TypeParameter[] = signature['target'] && signature['target'].typeParameters;
-  
+
   if (!targetParams) {
     return [];
   }
 
-  if(signature['mapper'] == undefined)   
-    return targetParams;   
+  if (signature['mapper'] == undefined)
+    return targetParams;
 
   //typescript <= 3.8
-  if(typeof signature['mapper'] == "function") 
-    return targetParams.map(p=>signature['mapper'](p));
+  if (typeof signature['mapper'] == "function")
+    return targetParams.map(p => signature['mapper'](p));
   //typescript >= 3.9.... 
-  return targetParams.map(p=> typeMapper(signature['mapper'] as TypeMapper, p));
+  return targetParams.map(p => typeMapper(signature['mapper'] as TypeMapper, p));
 }
 
 
 //need to ensure imports still work for toClass<T>() - 
 //https://github.com/Microsoft/TypeScript/issues/18369
 export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
-  return (context: ts.TransformationContext) => (file: ts.Node) => visitNodeAndChildren(file, program, context);
+  const typeChecker = program.getTypeChecker();
+  return (context: ts.TransformationContext) => {    
+    function visit(node: ts.Node) {    
+      if (ts.isCallExpression(node)) {
+        let methodArgs = node.arguments;
+        let typeArgs = node.typeArguments;
+        let methodName = undefined;
+    
+        if (ts.isIdentifier(node.expression)) {
+          methodName = node.expression.escapedText.toString();          
+    
+          if (!methodName) return node;
+    
+          if (methodName == "SymbolFor") {
+            return createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);
+          }
+    
+          if (((methodName == "Inject" || methodName == "to" || methodName == "toAll" || methodName == "injectedInto" || methodName == "hasAncestor") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
+            return createCallWithInjectedSymbol(node, typeChecker, visit);
+          }
+    
+          if ((methodName == "toSelf" && methodArgs.length == 1)) {
+            return createSelfCtorCallWithInjectedProviders(node, typeChecker);
+          }
+        }
+        else if (ts.isPropertyAccessExpression(node.expression)) {
+          methodName = node.expression.name.escapedText.toString()
+    
+          if ((methodName == "bind" && methodArgs.length == 1)) {
+            return createCallWithInjectedSymbol(node, typeChecker, visit);
+          }
+          if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
+            return createCallWithInjectedSymbol(node, typeChecker, visit);
+          }
+        }
+      }
+      return ts.visitEachChild(node, visit, context);
+    }   
+    
+    return (sourceFile: ts.SourceFile) => ts.visitNode(sourceFile, visit);
+  }
 }
+
+
 
