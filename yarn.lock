@@ -6713,7 +6713,7 @@ micromatch@^3.1.10, micromatch@^3.1.4:
     snapdragon "^0.8.1"
     to-regex "^3.0.2"
 
-micromatch@^4.0.0, micromatch@^4.0.2:
+micromatch@^4.0.0, micromatch@^4.0.2, micromatch@^4.0.4:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/micromatch/-/micromatch-4.0.4.tgz#896d519dfe9db25fce94ceb7a500919bf881ebf9"
   integrity sha512-pRmzw/XUcwXGpD9aI9q/0XOwLNygjETJ8y0ao0wdqprrzDa4YnxLcz7fQRZr8voh8V10kGhABbNcHVk5wHgWwg==
@@ -10258,12 +10258,12 @@ tryer@^1.0.1:
   integrity sha512-c3zayb8/kWWpycWYg87P71E1S1ZL6b6IJxfb5fvsUgsf0S2MVGaDhDXXjDMpdCpfWXqptc+4mXwmiy1ypXqRAA==
 
 ts-auto-mock@^3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-3.1.2.tgz#f1b4e73dd11a6296aa77d7779c341c29ab3b1fef"
-  integrity sha512-JoUQu7gtGXU0M8oDexUmBWcolzrGa2e69qm6DraRkkS09DsWfO7XE3lpCGjZ0kPQL+94Dv0unxSWpIY0qs5KnQ==
+  version "3.2.2"
+  resolved "https://registry.yarnpkg.com/ts-auto-mock/-/ts-auto-mock-3.2.2.tgz#c426302b65909878b85f5809709592af34b81750"
+  integrity sha512-VXtrHPo9Q60Dy8YuqoZV/AbAFhhS2H0J833UBk7mcFOKFeyP8VRP7axgES0TwBbLuGwzEzY126aYObAG+ySGXg==
   dependencies:
     lodash-es "^4.17.21"
-    micromatch "^4.0.2"
+    micromatch "^4.0.4"
     winston "^3.3.3"
 
 ts-loader@^6.2.2:
