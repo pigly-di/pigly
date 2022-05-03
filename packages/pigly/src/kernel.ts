@@ -51,7 +51,17 @@ export class Kernel implements IKernel {
     let _parent = request.parent;
     while (_parent != undefined) {
       if (_parent.target == target) {
-        throw Error("Cyclic Dependency Found.");
+
+        let history = [request.service];
+        let _parent = request.parent;
+        while (_parent != undefined) {
+          history.push(_parent.target);
+          _parent = _parent.parent;
+        };
+  
+        let msg = history.map(x=>x.toString()).reduceRight((p, n) => p + " > " + n.toString())
+
+        throw Error("Cyclic Dependency Found:" + msg);
       }
       _parent = _parent.parent;
     };
