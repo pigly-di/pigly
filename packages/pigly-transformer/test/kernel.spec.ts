@@ -1,9 +1,9 @@
-import { Kernel, toConst, toSelf } from "pigly";
+import { IProvider, Kernel, toConst, toSelf } from "pigly";
 import { expect } from "chai";
 
-import {IFoo} from './_foo';
+import { IFoo } from './_foo';
 
-import {IFoo as IBar} from './_foo';
+import { IFoo as IBar } from './_foo';
 
 describe("kernel", () => {
   it("can bind interface", () => {
@@ -18,14 +18,14 @@ describe("kernel", () => {
     let a = kernel.get<A>();
 
     expect(a.b.message).to.be.eq("hello");
-  }) 
+  })
 
   it("can bind generic interface", () => {
     const kernel = new Kernel();
 
-    interface A<T>{}
-    interface B{}
-    interface C{}
+    interface A<T> { }
+    interface B { }
+    interface C { }
 
     kernel.bind<A<B>>(toConst("AB"));
     kernel.bind<A<C>>(toConst("AC"));
@@ -35,23 +35,23 @@ describe("kernel", () => {
 
     expect(ab).to.be.eq("AB");
     expect(ac).to.be.eq("AC");
-  })  
+  })
   it("can bind generic interface, regardless of formatting", () => {
     const kernel = new Kernel();
 
-    interface A<T>{}
-    interface B{}
-    interface C{}
+    interface A<T> { }
+    interface B { }
+    interface C { }
 
-    kernel.bind<  A   <     B>>(toConst("AB"));
-    kernel.bind<A<  C>>(toConst("AC"));
+    kernel.bind<A<B>>(toConst("AB"));
+    kernel.bind<A<C>>(toConst("AC"));
 
-    let ab = kernel.get<A   < B>>();
-    let ac = kernel.get<A < C  >>();
+    let ab = kernel.get<A<B>>();
+    let ac = kernel.get<A<C>>();
 
     expect(ab).to.be.eq("AB");
     expect(ac).to.be.eq("AC");
-  })   
+  })
 
   it("can bind imported interface", () => {
     const kernel = new Kernel();
@@ -65,7 +65,7 @@ describe("kernel", () => {
 
     expect(a.b.message).to.be.eq("hello");
   })
-  
+
   xit("can bind aliased interface", () => {
     const kernel = new Kernel();
 
@@ -91,7 +91,7 @@ describe("kernel", () => {
 
     expect(a.b).to.be.eq("hello");
   })
-  
+
   it("can bind primitive: number", () => {
     const kernel = new Kernel();
 
@@ -103,5 +103,34 @@ describe("kernel", () => {
     let a = kernel.get<A>();
 
     expect(a.b).to.be.eq(10);
+  })
+
+  it("can be derived", () => {
+    class MyKernel extends Kernel {
+      bind<T>(service: symbol, provider: IProvider<T>): void;
+      bind<T>(provider: IProvider<T>): void;
+      bind(service: unknown, provider?: unknown): void {
+        if (typeof service == "symbol") {
+          let wrapped = function (ctx) {
+            let ori = (provider as IProvider<any>)(ctx);
+            if (typeof ori == "number") {
+              return ori * 2;
+            }
+            return ori;
+          }
+          super.bind(service, wrapped);
+        } else throw Error("must use transformer")
+      }
+    }
+    const kernel = new MyKernel();
+
+    class A { constructor(public b: number) { } }
+
+    kernel.bind(toSelf(A));
+    kernel.bind<number>(toConst(10));
+
+    let a = kernel.get<A>();
+
+    expect(a.b).to.be.eq(20);
   })
 })
