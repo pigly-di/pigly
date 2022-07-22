@@ -1,4 +1,4 @@
-import { Kernel, toConst, toClass, to, asSingleton, IContext, when, defer, hasAncestor } from "../src";
+import { Kernel, toConst, toClass, toFunc, to, asSingleton, IContext, when, defer, hasAncestor } from "../src";
 import { expect } from 'chai';
 
 interface IFoo {
@@ -210,6 +210,26 @@ describe("Providers", () => {
     expect(result1.arg1, "ctor parameter was provided").is.eql(10);
     expect(result1, "results are different instances").is.not.equal(result2);
   })
+
+  it("can resolve a function", () => {
+    const kernel = new Kernel();
+
+    function foo(arg1: number) {
+      return arg1 * 2;
+    }
+    
+    const $Foo = Symbol.for("Foo");
+
+    let wasCalled = false;
+
+    kernel.bind($Foo, toFunc(foo, _ => { wasCalled = true; return 10} ));
+
+    let result1 = kernel.get<Foo>($Foo);
+
+    expect(wasCalled, "function factory was called").is.true;
+    expect(result1, "result is expected number").is.equal(20);
+  })
+
 
   it("can resolve a singleton", () => {
     const kernel = new Kernel();

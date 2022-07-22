@@ -4,6 +4,7 @@ export * from './maybe';
 export * from './to-all';
 export * from './to-class';
 export * from './to-const';
+export * from './to-func';
 export * from './to-self';
 export * from './to';
 export * from './when';
