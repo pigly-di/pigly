@@ -1,30 +1,5 @@
 import * as ts from 'typescript';
 
-/*function visitNodeAndChildren(node: ts.Node, program: ts.Program, context: ts.TransformationContext): ts.Node {
-  return ts.visitEachChild(visitNode(node, program), childNode => visitNodeAndChildren(childNode, program, context), context);
-}*/
-
-
-
-/*function createSymbolFor(type: ts.Type, typeChecker: ts.TypeChecker) {
-  const symbol = type.symbol;
-
-  if (!type.isClassOrInterface() && type.isClass()) {
-    throw new Error("The type provided is not an interface"); ''
-  }
-
-  console.log("FLAGS:", type.flags);
-
-  console.log("SYMBOL:", symbol);
-
-  const decl = typeChecker.getDeclaredTypeOfSymbol(symbol);
-  const props: any = decl.getProperties().map(x => x.escapedName);
-  const sig = hash(JSON.stringify(props));
-  const uid = decl.symbol.name + "_" + sig;
-
-  return ts.createCall(ts.createIdentifier('Symbol.for'), [], [ts.createStringLiteral(uid)]);
-}*/
-
 function createSymbolFor(escapedName: string) {
   return ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
@@ -350,7 +325,7 @@ export default function transformer(program: ts.Program/*, opts?:{debug?: boolea
         else if (ts.isPropertyAccessExpression(node.expression)) {
           methodName = node.expression.name.escapedText.toString()
     
-          if ((methodName == "bind" && methodArgs.length == 1)) {
+          if ((methodName == "bind" && methodArgs.length == 1)) {    
             return createCallWithInjectedSymbol(node, typeChecker, visit);
           }
           if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {
