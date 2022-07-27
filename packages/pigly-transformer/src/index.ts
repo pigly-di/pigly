@@ -53,7 +53,7 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
       typeSymbol = createSymbolFor(typeString);
     }
     else if (ts.isToken(typeArgument)) {
-      //console.log("is token");
+     //console.log("is token");
       switch (typeArgument.kind) {
         case ts.SyntaxKind.StringKeyword:
           typeSymbol = createSymbolFor("string");
@@ -63,12 +63,20 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
           break;
       }
     }else if(ts.isTypeQueryNode(typeArgument)){
+      //console.log("is query node");
 
-      let symbol = typeChecker.getTypeAtLocation(typeArgument).symbol;
-      if(symbol){
-        let typeString = symbol.getEscapedName().toString().replace(/\s/g, '');
+      //let type = typeChecker.getTypeAtLocation(typeArgument);
+
+      //console.log(typeArgument.exprName.getText());
+        
+      //if(type.symbol){
+      //  let typeString = type.symbol.getEscapedName().toString().replace(/\s/g, '');
+      //  typeSymbol = createSymbolFor(typeString);
+      //}
+      //else{  
+        let typeString = typeArgument.getText().toString();
         typeSymbol = createSymbolFor(typeString);
-      }
+      //}
       //console.log("moo");
       //console.log(typeChecker.getTypeAtLocation(typeArgument.exprName));
       //console.log(typeArgument.exprName);
@@ -314,6 +322,7 @@ function inferTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker
 //https://github.com/Microsoft/TypeScript/issues/18369
 export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
   const typeChecker = program.getTypeChecker();
+  //console.log("PIGLY!");
   return (context: ts.TransformationContext) => {    
     function visit(node: ts.Node) {    
       if (ts.isCallExpression(node)) {

@@ -1,19 +1,5 @@
 import { Kernel, toConst, toSelf, whenAll, named, injectedInto, toClass, to } from 'pigly';
 
-
-class Foo {
-  constructor(bar: IBar) { }
-}
-
-interface IFoo {
-}
-
-interface IBar{
-
-}
-
-class Bar implements IBar{}
-
 function main() {
   const kernel = new Kernel();
 
