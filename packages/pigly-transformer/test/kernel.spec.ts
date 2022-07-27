@@ -105,6 +105,17 @@ describe("kernel", () => {
     expect(a.b).to.be.eq(10);
   })
 
+  it("can bind typeof types", ()=>{
+    const kernel = new Kernel();
+
+    class A { constructor(public b: string) { } };
+    const a: A = new A("moo");
+   
+    kernel.bind<typeof a>(toConst(a));
+
+    expect(a.b).to.be.eq("moo");
+  }),
+
   it("can be derived", () => {
     class MyKernel extends Kernel {
       bind<T>(service: symbol, provider: IProvider<T>): void;

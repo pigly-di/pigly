@@ -15,10 +15,14 @@ interface IBar{
 class Bar implements IBar{}
 
 function main() {
-  let kernel = new Kernel();
-  kernel.bind<IBar>(toClass(Bar));
-  kernel.bind<IFoo>(toClass(Foo, to<IBar>()));
-  console.log(kernel.get<IFoo>());
+  const kernel = new Kernel();
+
+  class A { constructor(public b: string) { } };
+  const a: A = new A("moo");
+ 
+  kernel.bind<typeof a>(toConst(a));
+
+  console.log(kernel.get<typeof a>());
 }
 
 console.log(main.toString());

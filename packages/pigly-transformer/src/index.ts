@@ -47,11 +47,13 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
     const typeArgument = node.typeArguments[0];
 
     if (ts.isTypeReferenceNode(typeArgument)) {
+      //console.log("is type ref");
       /** crude brute-force escaping of the type argument */
       let typeString = typeArgument.getText().replace(/\s/g, '');
       typeSymbol = createSymbolFor(typeString);
     }
     else if (ts.isToken(typeArgument)) {
+      //console.log("is token");
       switch (typeArgument.kind) {
         case ts.SyntaxKind.StringKeyword:
           typeSymbol = createSymbolFor("string");
@@ -60,6 +62,18 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
           typeSymbol = createSymbolFor("number");
           break;
       }
+    }else if(ts.isTypeQueryNode(typeArgument)){
+
+      let symbol = typeChecker.getTypeAtLocation(typeArgument).symbol;
+      if(symbol){
+        let typeString = symbol.getEscapedName().toString().replace(/\s/g, '');
+        typeSymbol = createSymbolFor(typeString);
+      }
+      //console.log("moo");
+      //console.log(typeChecker.getTypeAtLocation(typeArgument.exprName));
+      //console.log(typeArgument.exprName);
+    }else{      
+      //console.log("unknown", typeArgument.kind);
     }
   }
   else {
