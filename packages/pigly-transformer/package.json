@@ -2,7 +2,7 @@
   "name": "@pigly/transformer",
   "version": "1.1.2",
   "main": "dist/index.js",
-  "typings": "dist/transformer.d.ts",
+  "typings": "dist/index.d.ts",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.16",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^15.0.1",
+    "@types/node": "^18.0.0",
     "chai": "^4.3.4",
     "codecov": "^3.8.1",
     "cross-env": "^7.0.0",
