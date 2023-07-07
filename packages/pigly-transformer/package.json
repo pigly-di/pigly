@@ -23,13 +23,14 @@
     "nyc": "^15.1.0",
     "pigly": "^1.1.3",
     "source-map-support": "^0.5.19",
+    "ts-patch": "^3.0.1",
     "ttypescript": "^1.5.12",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.0"
   },
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "test": "cross-env TS_NODE_COMPILER=ttypescript nyc mocha test/**/*.spec.ts",
-    "example": "ts-node --compiler ttypescript example.ts",
+    "test": "cross-env TS_NODE_COMPILER=ts-patch/compiler nyc mocha test/**/*.spec.ts",
+    "example": "ts-node --compiler ts-patch/compiler example.ts",
     "coverage": "codecov --flags transformer"
   },
   "nyc": {
@@ -53,7 +54,7 @@
     "instrument": true
   },
   "peerDependencies": {
-    "typescript": ">=4.0.0"
+    "typescript": ">=5.0.0"
   },
   "files": [
     "/dist/*",
