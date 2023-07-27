@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "es2015",
-    "declaration": true,
+    "module": "ESNext",
+    "declaration": false,
     "sourceMap": false,
-    "outDir": "./dist/esm",
+    "outDir": "./dist",
     "rootDir": "src/",
   },
   "include": [
