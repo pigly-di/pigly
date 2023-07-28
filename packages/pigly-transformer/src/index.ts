@@ -295,7 +295,7 @@ function inferTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker
 
 //need to ensure imports still work for toClass<T>() - 
 //https://github.com/Microsoft/TypeScript/issues/18369
-export default function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
+export function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) {
   const typeChecker = program.getTypeChecker();
   //console.log("PIGLY!");
   return (context: ts.TransformationContext) => {    
@@ -340,5 +340,4 @@ export default function transformer(program: ts.Program/*, opts?:{debug?: boolea
   }
 }
 
-
-
+export default transformer;
