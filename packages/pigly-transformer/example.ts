@@ -3,12 +3,11 @@ import { Kernel, toConst, toSelf, whenAll, named, injectedInto, toClass, to } fr
 function main() {
   const kernel = new Kernel();
 
-  class A { constructor(public b: string) { } };
-  const a: A = new A("moo");
+  class A { constructor() { } };
  
-  kernel.bind<typeof a>(toConst(a));
+  kernel.bind(toSelf(A));
 
-  console.log(kernel.get<typeof a>());
+  console.log(kernel.get<A>());
 }
 
 console.log(main.toString());

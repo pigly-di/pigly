@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": false,
+    "module": "NodeNext",
+    "declaration": true,
     "sourceMap": false,
-    "outDir": "./dist/cjs",
+    "outDir": "./dist/esm",
     "rootDir": "src/",
   },
   "include": [

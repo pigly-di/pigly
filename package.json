@@ -13,7 +13,7 @@
   "scripts": {
     "build": "lerna run build",
     "test": "lerna run test",
-    "clean:dist": "rimraf **/*.tsbuildinfo && rimraf libs/**/dist && rimraf servers/**/dist && rimraf apps/**/dist && rimraf libs/**/build",
+    "clean:dist": "rimraf **/*.tsbuildinfo && rimraf **/dist",
     "clean": "npm run clean:dist && rimraf **/node_modules",
     "coverage": "lerna run coverage"
   }

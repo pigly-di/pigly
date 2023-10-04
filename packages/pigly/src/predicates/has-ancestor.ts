@@ -7,7 +7,7 @@ export function hasAncestor(symbol?: symbol): (ctx: IContext) => boolean {
   return (ctx: IContext) => {
     let _parent = ctx.parent;
     while (_parent != undefined) {
-      if(_parent.target == symbol){
+      if(_parent.service == symbol){
         return true;
       }
       _parent = _parent.parent;

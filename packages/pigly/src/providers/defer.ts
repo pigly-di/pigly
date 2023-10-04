@@ -28,8 +28,10 @@ export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>)
       for (let [key, provider] of Object.entries(inject)) {
         let _ctx: IContext = {
           kernel,
-          target: null,
           name: key,
+          parent: ctx.parent,
+          binding: ctx.binding,
+          service: ctx.service,
           resolve: (request: IRequest) => kernel.resolve(Object.assign({ parent: _ctx }, request))
         }
         resolved[key] = (provider as any)(_ctx);

@@ -261,6 +261,7 @@ type TypeMapper =
 
 
 function typeMapper(mapper: TypeMapper, source: ts.Type): ts.Type {
+
   switch (mapper.kind) {
     case TypeMapKind.Simple:
       return mapper.target;

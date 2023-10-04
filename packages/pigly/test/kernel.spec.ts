@@ -1,5 +1,6 @@
 import { Kernel, toConst, toClass, toFunc, to, asSingleton, IContext, when, defer, hasAncestor } from "../src";
 import { expect } from 'chai';
+import { Scope } from "../src/_scope";
 
 interface IFoo {
   bar: IBar;
@@ -132,8 +133,8 @@ describe("Resolving Context", () => {
     let resolved = kernel.get(A);
 
     expect(wasCalled, "resolved to provider").is.true;
-    expect(result.parent.target, "parent target is B").to.eql(B);
-    expect(result.parent.parent.target, "parent parent target is A").to.eql(A);
+    expect(result.parent.service, "parent service is B").to.eql(B);
+    expect(result.parent.parent.service, "parent parent service is A").to.eql(A);
     expect(resolved, "result is 10").to.eql(10);
   })
 
@@ -152,6 +153,7 @@ describe("Resolving Context", () => {
       kernel.get(A);
     }).throws("Cyclic Dependency Found");
   })
+
   it("should throw on no resolution", () => {
     const kernel = new Kernel();
 
@@ -236,7 +238,7 @@ describe("Providers", () => {
 
     const $IFoo = Symbol.for("IFoo");
 
-    kernel.bind($IFoo, asSingleton(_ => { return {} }));
+    kernel.bind($IFoo, _ => ({}), Scope.Singleton)
 
     let foo1 = kernel.get<IFoo>($IFoo);
     let foo2 = kernel.get<IFoo>($IFoo);
@@ -252,6 +254,13 @@ describe("Providers", () => {
     kernel.bind($IFoo, _ => 1);
     kernel.bind($IFoo, _ => 2);
     kernel.bind($IFoo, _ => 3);
+
+    interface A {
+      all?: boolean;
+    }
+
+    let a: A & {all: true};
+
 
     let foo = kernel.getAll<IFoo>($IFoo);
 
@@ -274,8 +283,8 @@ describe("Conditional", () => {
     kernel.bind(A, toClass(Foo, to(C)));
     kernel.bind(B, toClass(Foo, to(C)));
 
-    kernel.bind(C, when(x => x.parent.target == A, toConst("a")));
-    kernel.bind(C, when(x => x.parent.target == B, toConst("b")));
+    kernel.bind(C, when(x => x.parent.service == A, toConst("a")));
+    kernel.bind(C, when(x => x.parent.service == B, toConst("b")));
 
     let resultA = kernel.get<Foo>(A);
     let resultB = kernel.get<Foo>(B);
@@ -302,8 +311,8 @@ describe("Deferred Injection", () => {
     const $Foo = Symbol.for("Foo");
     const $Bar = Symbol.for("Bar");
 
-    kernel.bind($Foo, asSingleton(toClass(Foo, to($Bar))));
-    kernel.bind($Bar, asSingleton(defer(toClass(Bar), { foo: to($Foo) })));
+    kernel.bind($Foo, toClass(Foo, to($Bar)), Scope.Singleton);
+    kernel.bind($Bar, defer(toClass(Bar), { foo: to($Foo) }), Scope.Singleton);
 
     let foo = kernel.get<Foo>($Foo);
     let bar = kernel.get<Bar>($Bar);

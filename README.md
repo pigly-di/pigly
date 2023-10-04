@@ -5,9 +5,6 @@ unobtrusive, manually configured, dependency-injection for javascript/typescript
 
 ![CircleCI](https://img.shields.io/circleci/build/github/pigly-di/pigly?token=abc123def456) ![npm](https://img.shields.io/npm/v/pigly) ![npm](https://img.shields.io/npm/dm/pigly) ![Codecov](https://img.shields.io/codecov/c/gh/pigly-di/pigly)
 
-
-## Philosophy 
-
 > don't pollute the code with DI concerns 
 
 pigly is a simple helper to manually configure a DI container to bind symbols to providers. It explicitly avoids decorators, or any other changes to existing code, and on its own doesn't require any other dependency / compilation-step to work. However, when combined with the typescript transformer `@pigly/transformer` we can reduce the amount of boiler-plate and simply describe the bindings as: 
@@ -38,7 +35,6 @@ let ninja = kernel.get<INinja>();
 
 ## Planned features
 
-* Scoping
 * Better inferring of constructors
 
 ## Native Usage
@@ -311,6 +307,64 @@ let foo = kernel.get<IFoo>($IFoo);
 ```
 
 The current approach in the transformer, to make the type's symbol, is to use the imported name directly i.e. `SymbolFor<IFoo>()` is converted to `Symbol.for("IFoo")`. The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independently-compiled libraries, or when using the transformer in a "transform only" build stage, as is typically the case with Webpack and Vue. The downside is that you must be consistent with type names, avoid renaming during imports and do not implement two or more interfaces with the exact same identifier-name. 
+
+## Scoping
+
+Scoping affects how and when a service resolution is cached. By default all bindings are transient.  
+
+### Singleton
+the resolution of a service is cached in the root resolver, such that every request for the same service will receive the same  instance
+
+```ts
+kernel.bind<IFoo>(toClass(Foo), Scope.Singleton);
+
+const a = kernel.get<IFoo>();
+const b = kernel.get<IFoo>();
+
+assert(a === b); //true
+```
+### Transient
+the resolution of a service is cached in the root resolver, such that every request for the same service will receive the same  instance
+
+```ts
+kernel.bind<IFoo>(toClass(Foo), Scope.Transient);
+// or 
+kernel.bind<IFoo>(toClass(Foo));
+
+const a = kernel.get<IFoo>();
+const b = kernel.get<IFoo>();
+
+assert(a !== b); //true
+```
+
+### Request
+
+with request scoping, the resolution is cached by the current request 'scope' symbol. In a HTTP2 server example, we could decide to make a new 'scope' for each new stream connection. In this context, we can bind services to be unique, but cached, within each HTTP2 Stream 
+
+```ts
+class Foo { 
+  constructor(
+    public bar1: Bar, 
+    public bar2: Bar){
+    }
+};
+
+const HTTP2Request = Symbol('http2')
+
+kernel.bind<Foo>(toClass(Foo, to<Bar>())));
+kernel.bind<Bar>(toClass(Bar), HTTP2Request);
+
+const a = kernel.get<Foo>();
+const b = kernel.get<Foo>();
+
+assert(a !== b); //true - Foo binding transient
+assert(b.bar1 !== a.bar1); //true - 
+assert(a.bar1 === a.bar2); //true
+assert(b.bar1 === b.bar2); //true
+```
+
+
+
 
 ## License
 MIT

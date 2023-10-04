@@ -4,6 +4,10 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "typings": "dist/esm/index.d.ts",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -26,9 +30,10 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "build": "npm run build:esm && npm run build:cjs",
+    "build": "npm run build:esm && npm run build:cjs && npm run build:pack",
     "build:esm": "tsc --build tsconfig.build.esm.json",
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
+    "build:pack": "node ./gen-package.mjs",
     "test": "nyc mocha test/**/*.spec.ts",
     "coverage": "codecov --flags pigly"
   },

@@ -4,5 +4,5 @@ export function injectedInto(symbol: symbol): (ctx: IContext) => boolean
 export function injectedInto(): never;
 export function injectedInto<P>(): (ctx: IContext) => boolean;
 export function injectedInto(symbol?: symbol): (ctx: IContext) => boolean {
-  return (ctx: IContext) => ctx.parent && ctx.parent.target == symbol;
+  return (ctx: IContext) => ctx.parent && ctx.parent.service == symbol;
 }

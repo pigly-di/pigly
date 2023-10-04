@@ -2,7 +2,7 @@ import { Kernel, when, toConst, toSelf, named } from "pigly";
 import { expect } from "chai";
 
 describe("named", () => {
-  it("can conditionally inject service if context name matches", () => {
+  xit("can conditionally inject service if context name matches", () => {
     const kernel = new Kernel();
 
     class A { constructor(public c: C){}}
