@@ -1,16 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "target": "ESNext",
     "module": "CommonJS",
+    "moduleResolution": "NodeNext",
     "declaration": false,
     "sourceMap": false,
     "outDir": "./dist/cjs",
-    "rootDir": "src/",
+    "rootDir": "src/"
   },
-  "include": [
-    "src/"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/"],
+  "exclude": ["node_modules"]
 }
