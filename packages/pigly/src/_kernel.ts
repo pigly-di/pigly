@@ -6,7 +6,7 @@ import { Scope } from "./_scope";
 
 export interface IKernel extends IReadOnlyKernel {
   /**Bind a Symbol to a provider */
-  bind<T>(service: Service, provider: IProvider<T>): IBinding;
-  /**REQUIRES TRANSFORMER: Bind interface T to a provider */
-  bind<T>(provider: IProvider<T>): IBinding;
+  bind<T>(service: Service, provider: IProvider<T>, scope?: Scope): IBinding;
+  /**Bind interface T to a provider - note requires compile-time @pigly/transformer */
+  bind<T>(provider: IProvider<T>, scope?: Scope): IBinding;
 }

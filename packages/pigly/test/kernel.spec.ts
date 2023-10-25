@@ -1,4 +1,4 @@
-import { Kernel, toConst, toClass, toFunc, to, asSingleton, IContext, when, defer, hasAncestor } from "../src";
+import { Kernel, toConst, toClass, toFunc, to, IContext, when, defer, hasAncestor } from "../src";
 import { expect } from 'chai';
 import { Scope } from "../src/_scope";
 

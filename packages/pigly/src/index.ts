@@ -11,9 +11,11 @@ export * from './_request';
 export * from './_resolution';
 export * from './_resolver-root';
 export * from './_service';
+export * from './_scope';
 
 export * from './declarations';
 
 export * from './kernel';
+
 
 

@@ -1,4 +1,3 @@
-export * from './as-singleton';
 export * from './defer';
 export * from './maybe';
 export * from './to-all';
