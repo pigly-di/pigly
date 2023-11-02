@@ -4,7 +4,6 @@ import { expect } from "chai";
 import { IFoo } from './_foo';
 
 import { IFoo as IBar } from './_foo';
-import { Scope } from 'pigly/dist/esm/_scope';
 
 describe("kernel", () => {
   it("can bind interface", () => {

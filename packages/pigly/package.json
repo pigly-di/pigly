@@ -27,7 +27,7 @@
     "nyc": "^15.1.0",
     "source-map-support": "^0.5.19",
     "ts-node": "^8.1.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.2.2"
   },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs && npm run build:pack",

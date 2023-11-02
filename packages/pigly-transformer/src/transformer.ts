@@ -1,5 +1,12 @@
 import * as ts from 'typescript';
 
+function isServiceType(node: ts.Node, typeChecker: ts.TypeChecker){
+  let type = typeChecker.getTypeAtLocation(node);
+  let flags = type.getFlags();
+
+  return flags == ts.TypeFlags.ESSymbol
+}
+
 function createSymbolFor(escapedName: string) {
   return ts.factory.createCallExpression(
     ts.factory.createPropertyAccessExpression(
@@ -304,13 +311,18 @@ export function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) : 
         let methodArgs = node.arguments;
         let typeArgs = node.typeArguments;
         let methodName = undefined;
+        //console.log("is call expression");
     
-        if (ts.isIdentifier(node.expression)) {
-          methodName = node.expression.escapedText.toString();          
-    
-          if (!methodName) return node;
-    
+        if (ts.isIdentifier(node.expression)) {          
+          methodName = node.expression.escapedText.toString();
+
+          if (!methodName) {
+            //console.log("no method name");
+            return node;
+          }
+              
           if (methodName == "SymbolFor") {
+            //console.log("SymbolFor")
             return createTypeSymbolFromCallExpressionTypeArguments(node, typeChecker);
           }
     
@@ -323,9 +335,9 @@ export function transformer(program: ts.Program/*, opts?:{debug?: boolean}*/) : 
           }
         }
         else if (ts.isPropertyAccessExpression(node.expression)) {
-          methodName = node.expression.name.escapedText.toString()
-    
-          if ((methodName == "bind" && methodArgs.length == 1)) {    
+          methodName = node.expression.name.escapedText.toString();
+          
+          if ((methodName == "bind" && methodArgs.length > 0 && isServiceType(methodArgs[0], typeChecker) == false)) {  
             return createCallWithInjectedSymbol(node, typeChecker, visit);
           }
           if (((methodName == "get" || methodName == "getAll") && typeArgs && typeArgs.length == 1 && methodArgs.length == 0)) {

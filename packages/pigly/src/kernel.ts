@@ -7,19 +7,10 @@ import { IRequest } from "./_request";
 import { IResolution } from "./_resolution";
 import { Scope } from './_scope';
 
-const fnNameMatcher = /([^(]+)@|at ([^(]+) \(/;
-
-function fnName(str) {
-  const regexResult = fnNameMatcher.exec(str);
-  return regexResult[1] || regexResult[2];
-}
-
 function getCallSite(stack: string): string {
   const logLines = stack.split('\n');
-  const callerName = fnName(logLines[2])
-  if (callerName !== null) {
-    return logLines[2].replace(/^ *at */, "")
-  }
+  let caller = logLines[2];
+  if (caller) { return caller.trim(); }
   return null;
 }
 
@@ -61,13 +52,10 @@ export class Kernel implements IKernel {
 
   resolve<T>(request: IRequest): IResolution<T> {
     const self = this;
-    let service = request.service;
-    let result: any[] = null;
-
     return {
       [Symbol.iterator]() { return self._resolve(request) },
       toArray: function () {
-        return  Array.from(self._resolve(request))
+        return Array.from(self._resolve(request))
       },
       first: function () {
         return self._resolve(request).next().value;
@@ -90,7 +78,7 @@ export class Kernel implements IKernel {
           service: request.service,
           binding: binding,
           resolve: (request: IRequest) => this.resolve(Object.assign({ parent: ctx }, request))
-        }        
+        }
         const scope = binding.scope;
         const cache = scope.getCache(ctx);
 
@@ -130,28 +118,35 @@ export class Kernel implements IKernel {
     while (_parent != undefined) {
       if (_parent.service == target) {
 
-        let history = [request.service];
+        let history:IContext[] = [];
         let _parent = request.parent;
         while (_parent != undefined) {
-          history.push(_parent.service);
+          history.push(_parent);
           _parent = _parent.parent;
         };
 
-        let msg = history.map(x => x.toString()).reduceRight((p, n) => p + " > " + n.toString())
+        let msg = "Pigly Cyclic Dependency Found \n";
+        
+        msg += "  Requested: " + request.service.toString() + "\n";
 
-        throw Error("Cyclic Dependency Found:" + msg);
+        for(let ctx of history){
+          msg += "  Into: " + ctx.service.toString() + "\n";
+          msg += "    Config: " + ctx.binding.site + "\n";
+        }
+    
+        throw Error(msg);
       }
       _parent = _parent.parent;
     };
   }
 
-  get<T>(): T; 
+  get<T>(): T;
   get<T>(service: Service): T;
   get<T>(service?: Service): any | Array<any> {
     if (isService(service) == false) throw Error('called "get" without a service');
     return this.resolve<T>({ service }).first();
-  }  
-  getAll<T>(): T; 
+  }
+  getAll<T>(): T;
   getAll<T>(service: Service): T;
   getAll<T>(service?: Service): any | Array<any> {
     if (isService(service) == false) throw Error('called "get" without a service');

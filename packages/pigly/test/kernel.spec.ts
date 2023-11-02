@@ -103,7 +103,9 @@ describe("Kernel Basics", () => {
 
     kernel.bind(A, _ => undefined);
     kernel.bind(A, toConst("hello"));
-    kernel.bind(A, _ => { throw Error("should not be called") });
+    let a = kernel.bind(A, _ => { throw Error("should not be called") });
+
+    console.log(a.site);
 
     let result = kernel.get(A);
 

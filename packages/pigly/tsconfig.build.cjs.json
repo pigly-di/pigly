@@ -3,7 +3,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "CommonJS",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node",
     "declaration": false,
     "sourceMap": false,
     "outDir": "./dist/cjs",
