@@ -4,7 +4,7 @@
     "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "declaration": false,
+    "declaration": true,
     "sourceMap": false,
     "outDir": "./dist/cjs",
     "rootDir": "src/"
