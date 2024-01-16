@@ -1,6 +1,6 @@
 {
   "name": "@pigly/transformer",
-  "version": "2.0.0-alpha.5",
+  "version": "2.0.0-alpha.6",
   "main": "./dist/cjs/index.js",
   "typings": "./dist/cjs/index.d.ts",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "cross-env": "^7.0.0",
     "mocha": "^10",
     "nyc": "^15.1.0",
-    "pigly": "^2.0.0-alpha.5",
+    "pigly": "^2.0.0-alpha.6",
     "source-map-support": "^0.5.19",
     "ts-patch": "^3.0.1",
     "typescript": "^5.2.2"
