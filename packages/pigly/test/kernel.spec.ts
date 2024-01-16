@@ -1,4 +1,4 @@
-import { Kernel, toConst, toClass, toFunc, to, IContext, when, defer, hasAncestor } from "../src";
+import { Kernel, name, toConst, toClass, toFunc, to, IContext, when, defer, hasAncestor, named } from "../src";
 import { expect } from 'chai';
 import { Scope } from "../src/_scope";
 
@@ -221,12 +221,12 @@ describe("Providers", () => {
     function foo(arg1: number) {
       return arg1 * 2;
     }
-    
+
     const $Foo = Symbol.for("Foo");
 
     let wasCalled = false;
 
-    kernel.bind($Foo, toFunc(foo, _ => { wasCalled = true; return 10} ));
+    kernel.bind($Foo, toFunc(foo, _ => { wasCalled = true; return 10 }));
 
     let result1 = kernel.get<Foo>($Foo);
 
@@ -261,7 +261,7 @@ describe("Providers", () => {
       all?: boolean;
     }
 
-    let a: A & {all: true};
+    let a: A & { all: true };
 
 
     let foo = kernel.getAll<IFoo>($IFoo);
@@ -271,6 +271,25 @@ describe("Providers", () => {
 })
 
 describe("Conditional", () => {
+  it("can predicate provider with target name", () => {
+    const kernel = new Kernel();
+
+    class Foo {
+      constructor(public foo: string) { }
+    }
+
+    const A = Symbol.for("A");
+    const B = Symbol.for("B");
+
+    kernel.bind(A, when(named("foo"), toConst("FOO")));
+    kernel.bind(A, when(named("bar"), toConst("BAR")));
+
+    kernel.bind(B, toClass(Foo, name("foo", to(A))));
+
+    let resultA = kernel.get<Foo>(B);
+    expect(resultA.foo).is.eq("FOO");
+  })
+
   it("can predicate provider with when", () => {
     const kernel = new Kernel();
 
@@ -326,6 +345,29 @@ describe("Deferred Injection", () => {
       expect(bar.foo).is.equal(foo);
       done();
     });
+  })
+
+  it("can predicate provider with target name", (done) => {
+    const kernel = new Kernel();
+
+    class Foo {
+      constructor(public foo: string) { }
+    }
+
+    const A = Symbol.for("A");
+    const B = Symbol.for("B");
+
+    kernel.bind(A, when(named("foo"), toConst("FOO")));
+    kernel.bind(A, when(named("bar"), toConst("BAR")));
+
+    // inject with "bar" as target, then defer assign with "foo" target
+    kernel.bind(B, defer(toClass(Foo, name("bar", to(A))), { foo: to(A) }))
+
+    let resultA = kernel.get<Foo>(B);
+    setImmediate(() => {
+      expect(resultA.foo).is.eq("FOO");
+      done();
+    })
   })
 })
 

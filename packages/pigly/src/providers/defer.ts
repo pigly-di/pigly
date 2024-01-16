@@ -27,8 +27,8 @@ export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>)
     __setImmediate(() => {
       for (let [key, provider] of Object.entries(inject)) {
         let _ctx: IContext = {
-          kernel,
-          name: key,
+          kernel,  
+          target: key,        
           parent: ctx.parent,
           binding: ctx.binding,
           service: ctx.service,
