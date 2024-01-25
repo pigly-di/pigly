@@ -9,4 +9,6 @@ export interface IRequest {
   service: Service;
   /** when not null, the parent context  */
   parent?: IContext;
+  /** name tag requested */
+  target?: string;
 }

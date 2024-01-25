@@ -19,7 +19,7 @@ function getCallSite(stack: string): string {
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>();
 
-  constructor(private opts = {verbose:false}){
+  constructor(private opts = { verbose: false }) {
 
   }
 
@@ -78,13 +78,24 @@ export class Kernel implements IKernel {
 
     if (bindings != undefined) {
       for (let binding of bindings) {
-        let ctx: IContext = {
+        const resolve = function (this: IContext, req: IRequest) {
+          return this.kernel.resolve(Object.assign({ parent: this }, req));
+        };
+        const ctx: IContext = {
           kernel: this,
+          request,
           parent: request.parent,
           service: request.service,
           binding: binding,
-          resolve: (request: IRequest) => this.resolve(Object.assign({ parent: ctx }, request))
+          resolve: null,
+          createContext: function (_ctx: Partial<IContext>) {
+            let result = Object.assign({}, ctx, _ctx, { parent: ctx });
+            result.resolve = resolve.bind(result);
+            return result
+          }
         }
+        ctx.resolve = resolve.bind(ctx);
+
         const scope = binding.scope;
         const cache = scope.getCache(ctx);
 
@@ -120,27 +131,10 @@ export class Kernel implements IKernel {
   }
   private _checkCyclicDependency(request: IRequest) {
     let target = request.service;
-    let _parent = request.parent;
+    let _parent = request.parent?.request;
     while (_parent != undefined) {
       if (_parent.service == target) {
-
-        let history:IContext[] = [];
-        let _parent = request.parent;
-        while (_parent != undefined) {
-          history.push(_parent);
-          _parent = _parent.parent;
-        };
-
-        let msg = "Pigly Cyclic Dependency Found \n";
-        
-        msg += "  Requested: " + request.service.toString() + "\n";
-
-        for(let ctx of history){
-          msg += "  Into: " + ctx.service.toString() + "\n";
-          msg += "    Config: " + ctx.binding.site + "\n";
-        }
-    
-        throw Error(msg);
+        reportCyclicError(request)
       }
       _parent = _parent.parent;
     };
@@ -158,4 +152,24 @@ export class Kernel implements IKernel {
     if (isService(service) == false) throw Error('called "get" without a service');
     return this.resolve<T>({ service }).toArray();
   }
+}
+
+function reportCyclicError(request: IRequest) {
+  let history: IContext[] = [];
+  let _parent = request.parent;
+  while (_parent != undefined) {
+    history.push(_parent);
+    _parent = _parent.parent;
+  };
+
+  let msg = "Pigly Cyclic Dependency Found \n";
+
+  msg += "  Requested: " + request.service.toString() + (request.target?`(${request.target})`: "") + "\n";
+
+  for (let ctx of history) {
+    msg += "  Into: " + ctx.service.toString() + (ctx.target?`(${ctx.target})`: "") + "\n";
+    msg += "    Config: " + ctx.binding.site + "\n";
+  }
+
+  throw Error(msg);
 }
