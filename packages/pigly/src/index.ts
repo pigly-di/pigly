@@ -16,6 +16,6 @@ export * from './_scope';
 export * from './declarations';
 
 export * from './kernel';
-
+export * from './errors';
 
 

@@ -1,6 +1,7 @@
 import { Kernel, name, toConst, toClass, toFunc, to, IContext, when, defer, hasAncestor, named } from "../src";
 import { expect } from 'chai';
 import { Scope } from "../src/_scope";
+import { ResolveError } from "../src/errors";
 
 interface IFoo {
   bar: IBar;
@@ -165,7 +166,7 @@ describe("Resolving Context", () => {
 
     expect(() => {
       kernel.get(A);
-    }).throws("could not resolve Symbol(A)");
+    }).throws("could not resolve Symbol(A)").instanceOf(ResolveError)
   })
 })
 

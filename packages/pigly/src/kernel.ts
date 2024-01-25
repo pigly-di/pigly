@@ -6,6 +6,7 @@ import { Service, isService } from "./_service";
 import { IRequest } from "./_request";
 import { IResolution } from "./_resolution";
 import { Scope } from './_scope';
+import { ResolveError } from "./errors";
 
 function getCallSite(stack: string): string {
   const logLines = stack.split('\n');
@@ -14,8 +15,13 @@ function getCallSite(stack: string): string {
   return null;
 }
 
+
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>();
+
+  constructor(private opts = {verbose:false}){
+
+  }
 
   /**Bind a Symbol to a provider */
   bind<T>(service: Service, provider: IProvider<T>, scope?: Scope): IBinding;
@@ -109,7 +115,7 @@ export class Kernel implements IKernel {
 
       let msg = history.reduceRight((p, n) => p += " > " + n.toString(), "")
 
-      throw Error("could not resolve " + request.service.valueOf().toString() + msg);
+      throw new ResolveError(request.service, msg);
     }
   }
   private _checkCyclicDependency(request: IRequest) {
