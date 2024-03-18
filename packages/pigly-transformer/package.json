@@ -28,7 +28,6 @@
   },
   "scripts": {
     "build": "npm run build:cjs",
-    "build:esm": "tsc --build tsconfig.build.esm.json",
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
     "build:pack": "node ./gen-package.mjs",
     "test": "cross-env TS_NODE_COMPILER=ts-patch/compiler nyc mocha test/**/*.spec.ts",
