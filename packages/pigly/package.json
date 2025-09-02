@@ -13,7 +13,7 @@
     "url": "https://github.com/MeirionHughes"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.16",
+    "@types/chai": "^5.2.2",
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.0.0",
     "chai": "^4.3.4",
