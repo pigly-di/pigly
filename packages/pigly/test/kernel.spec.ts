@@ -1,7 +1,7 @@
 import { Kernel, name, toConst, toClass, toFunc, to, IContext, when, defer, hasAncestor, named } from "../src";
 import { expect } from 'chai';
 import { Scope } from "../src/_scope";
-import { ResolveError } from "../src/errors";
+import { CyclicError, ResolveError } from "../src/errors";
 
 interface IFoo {
   bar: IBar;
@@ -54,7 +54,7 @@ describe("Kernel Basics", () => {
     expect(result, "result is 10").is.equal(10);
   })
 
-  it("can multi-bind and get first", () => {
+  it("can multi-bind but get returns last binding", () => {
     const kernel = new Kernel();
 
     const $IFoo = Symbol.for("IFoo");
@@ -64,7 +64,7 @@ describe("Kernel Basics", () => {
 
     let result = kernel.get<number>($IFoo);
 
-    expect(result, "result is 10").to.eql(10);
+    expect(result, "result is 11").to.eql(11);
   })
 
   it("can multi-bind and resolve all ", () => {
@@ -81,7 +81,7 @@ describe("Kernel Basics", () => {
       result.push(item);
     }
 
-    expect(result, "result is 10").to.eql([10, 11]);
+    expect(result, "result is [11 10]").to.eql([11, 10]);
   })
 
   it("should ignore providers returning undefined", () => {
@@ -151,7 +151,18 @@ describe("Resolving Context", () => {
 
     expect(() => {
       kernel.get(A);
-    }).throws("Cyclic Dependency Found");
+    }).throws(/Cyclic Dependency Found/).instanceOf(CyclicError)
+  })
+
+  it("should throw on no binding", () => {
+    const kernel = new Kernel();
+
+    const A = Symbol.for("A");
+
+
+    expect(() => {
+      kernel.get(A);
+    }).throws(/No providers bound for 'A'/).instanceOf(ResolveError)
   })
 
   it("should throw on no resolution", () => {
@@ -163,7 +174,7 @@ describe("Resolving Context", () => {
 
     expect(() => {
       kernel.get(A);
-    }).throws("could not resolve Symbol(A)").instanceOf(ResolveError)
+    }).throws(/All providers for 'A' returned undefined/).instanceOf(ResolveError)
   })
 })
 
@@ -264,7 +275,7 @@ describe("Providers", () => {
 
     let foo = kernel.getAll<IFoo>($IFoo);
 
-    expect(foo, "result is array").is.eql([1, 2, 3])
+    expect(foo, "result is array").is.eql([3, 2, 1])
   })
 })
 
@@ -394,8 +405,10 @@ describe("Predicates", () => {
       const B = Symbol.for("B");
       const C = Symbol.for("C");
 
-      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+      // initial binding to fallback to 
       kernel.bind(A, toConst("bar"));
+      // the rebinding with condition that will be used when ancestor matches
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
       kernel.bind(B, to(A));
       kernel.bind(C, to(B));
 

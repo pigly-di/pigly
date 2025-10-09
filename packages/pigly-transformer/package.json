@@ -1,6 +1,6 @@
 {
   "name": "@pigly/transformer",
-  "version": "2.0.0-alpha.9",
+  "version": "2.0.0-alpha.10",
   "main": "./dist/cjs/index.js",
   "typings": "./dist/cjs/index.d.ts",
   "license": "MIT",
@@ -17,7 +17,6 @@
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.0.0",
     "chai": "^4.3.4",
-    "codecov": "^3.8.1",
     "cross-env": "^7.0.0",
     "mocha": "^10",
     "nyc": "^15.1.0",
@@ -32,7 +31,7 @@
     "build:pack": "node ./gen-package.mjs",
     "test": "cross-env TS_NODE_COMPILER=ts-patch/compiler nyc mocha test/**/*.spec.ts",
     "example": "ts-node --compiler ts-patch/compiler example.ts",
-    "coverage": "codecov --flags transformer"
+    "coverage": "nyc report --reporter=lcov"
   },
   "nyc": {
     "exclude": [

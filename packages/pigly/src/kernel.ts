@@ -2,58 +2,73 @@ import { IContext } from "./_context";
 import { IProvider, isProvider } from "./_provider";
 import { IBinding } from "./_binding";
 import { IKernel } from "./_kernel";
+import { IReadOnlyKernel } from "./_read-only-kernel";
 import { Service, isService } from "./_service";
 import { IRequest } from "./_request";
 import { IResolution } from "./_resolution";
 import { Scope } from './_scope';
-import { ResolveError } from "./errors";
+import { CyclicError, ResolveError } from "./errors";
 
 function getCallSite(stack: string): string {
   const logLines = stack.split('\n');
-  let caller = logLines[2];
+  let caller = logLines[3];
   if (caller) { return caller.trim(); }
   return null;
 }
 
+function getProviderInfo(provider: any): string {
+  if (!provider || !provider.meta) {
+    return '';
+  }
+  
+  const meta = provider.meta;
+  const parts: string[] = [];
+  
+  if (meta.name) {
+    parts.push(`via ${meta.name}`);
+  }
+  
+  // Add specific metadata based on provider type
+  if (meta.ctor) {
+    parts.push(`(${meta.ctor.name})`);
+  } else if (meta.to) {
+    const toStr = meta.to.description || meta.to.toString();
+    parts.push(`(${toStr})`);
+  }
+  
+  return parts.length > 0 ? ` [${parts.join(' ')}]` : '';
+}
 
-export class Kernel implements IKernel {
-  private _bindings = new Map<symbol, IBinding[]>();
+function reportCyclicError(request: IRequest) {
+  let history: IContext[] = [];
+  let _parent = request.parent;
+  while (_parent != undefined) {
+    history.push(_parent);
+    _parent = _parent.parent;
+  };
 
-  constructor(private opts = { verbose: false }) {
+  let msg = "Cyclic Dependency Found \n";
 
+  msg += "  Requested: " + request.service.toString() + (request.target?`(${request.target})`: "") + "\n";
+
+  for (let ctx of history) {
+    const providerInfo = getProviderInfo(ctx.binding?.provider);
+    msg += "  Into: " + ctx.service.toString() + (ctx.target?`(${ctx.target})`: "") + providerInfo + "\n";
+    msg += "    Config: " + ctx.binding.site + "\n";
   }
 
-  /**Bind a Symbol to a provider */
-  bind<T>(service: Service, provider: IProvider<T>, scope?: Scope): IBinding;
-  /**Bind interface T to a provider - note requires compile-time @pigly/transformer */
-  bind<T>(provider: IProvider<T>, scope?: Scope): IBinding;
-  bind<T>(...args: any[]): IBinding {
-    const service: Service = args[0];
-    const provider: IProvider<T> = args[1];
-    const scope: Scope = args[2] ?? Scope.Transient;
+  throw new CyclicError(msg);
+}
 
-    if (isService(service) === false) {
-      throw Error("first argument must be a service type");
-    }
-    if (isProvider(provider) === false) {
-      throw Error("second argument must be a provider function");
-    }
+/**
+ * Abstract base kernel with core resolution, caching, and retrieval logic
+ * Implements IReadOnlyKernel - derived classes must implement their own bind methods
+ */
+export abstract class AbstractKernel implements IReadOnlyKernel {
+  protected _bindings = new Map<symbol, IBinding[]>();
 
-    const site = getCallSite((new Error()).stack);
+  constructor(protected opts = { verbose: false }) {
 
-    let bindings: IBinding[] = [];
-
-    if (this._bindings.has(service)) {
-      bindings = this._bindings.get(service);
-    }
-
-    let binding = { provider, site, scope };
-
-    bindings.push(binding);
-
-    this._bindings.set(service, bindings);
-
-    return binding;
   }
 
   resolve<T>(request: IRequest): IResolution<T> {
@@ -75,6 +90,7 @@ export class Kernel implements IKernel {
     const bindings = this._bindings.get(service);
 
     let wasResolved = false;
+    const hadBindings = bindings !== undefined && bindings.length > 0;
 
     if (bindings != undefined) {
       for (let binding of bindings) {
@@ -117,16 +133,18 @@ export class Kernel implements IKernel {
     }
 
     if (wasResolved == false) {
-      let history = [];
-      let _parent = request.parent;
-      while (_parent != undefined) {
-        history.push(_parent.service);
-        _parent = _parent.parent;
-      };
+      // Create a context for error reporting if we don't have one
+      const errorContext = request.parent || {
+        kernel: this,
+        request,
+        parent: request.parent,
+        service: request.service,
+        binding: null,
+        resolve: null,
+        createContext: null
+      } as IContext;
 
-      let msg = history.reduceRight((p, n) => p += " > " + n.toString(), "")
-
-      throw new ResolveError(request.service, msg);
+      throw new ResolveError(request.service, errorContext, hadBindings);
     }
   }
   private _checkCyclicDependency(request: IRequest) {
@@ -152,24 +170,50 @@ export class Kernel implements IKernel {
     if (isService(service) == false) throw Error('called "get" without a service');
     return this.resolve<T>({ service }).toArray();
   }
+
+  /**
+   * Protected method to add a binding - used by derived classes
+   */
+  protected _addBinding<T>(service: Service, provider: IProvider<T>, scope: Scope): IBinding {
+    if (isService(service) === false) {
+      throw Error("first argument must be a service type");
+    }
+    if (isProvider(provider) === false) {
+      throw Error("second argument must be a provider function");
+    }
+
+    const site = getCallSite((new Error()).stack);
+
+    let bindings: IBinding[] = [];
+
+    if (this._bindings.has(service)) {
+      bindings = this._bindings.get(service);
+    }
+
+    let binding = { provider, site, scope };
+
+    // Push to start of array so that last binding is returned first (implicit rebinding)
+    bindings.unshift(binding);
+
+    this._bindings.set(service, bindings);
+
+    return binding;
+  }
 }
 
-function reportCyclicError(request: IRequest) {
-  let history: IContext[] = [];
-  let _parent = request.parent;
-  while (_parent != undefined) {
-    history.push(_parent);
-    _parent = _parent.parent;
-  };
+/**
+ * @deprecated use StandardKernel
+ */
+export class Kernel extends AbstractKernel implements IKernel {
+  /**Bind a Symbol to a provider */
+  bind<T>(service: Service, provider: IProvider<T>, scope?: Scope): IBinding;
+  /**Bind interface T to a provider - note requires compile-time @pigly/transformer */
+  bind<T>(provider: IProvider<T>, scope?: Scope): IBinding;
+  bind<T>(...args: any[]): IBinding {
+    const service: Service = args[0];
+    const provider: IProvider<T> = args[1];
+    const scope: Scope = args[2] ?? Scope.Transient;
 
-  let msg = "Pigly Cyclic Dependency Found \n";
-
-  msg += "  Requested: " + request.service.toString() + (request.target?`(${request.target})`: "") + "\n";
-
-  for (let ctx of history) {
-    msg += "  Into: " + ctx.service.toString() + (ctx.target?`(${ctx.target})`: "") + "\n";
-    msg += "    Config: " + ctx.binding.site + "\n";
+    return this._addBinding(service, provider, scope);
   }
-
-  throw Error(msg);
 }

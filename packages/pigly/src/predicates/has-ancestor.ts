@@ -4,7 +4,7 @@ export function hasAncestor(symbol: symbol): (ctx: IContext) => boolean
 export function hasAncestor(): never;
 export function hasAncestor<P>(): (ctx: IContext) => boolean;
 export function hasAncestor(symbol?: symbol): (ctx: IContext) => boolean {
-  return (ctx: IContext) => {
+  const predicate = (ctx: IContext) => {
     let _parent = ctx.parent;
     while (_parent != undefined) {
       if(_parent.service == symbol){
@@ -13,5 +13,14 @@ export function hasAncestor(symbol?: symbol): (ctx: IContext) => boolean {
       _parent = _parent.parent;
     };
     return false;
-  }
+  };
+
+  Object.defineProperty(predicate, "meta", {
+    value: { name: "hasAncestor", symbol },
+    enumerable: false,
+    configurable: false,
+    writable: false
+  });
+
+  return predicate;
 }

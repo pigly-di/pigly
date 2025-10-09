@@ -7,5 +7,15 @@ export function toAll<T>(): IProvider<T[]>
 export function toAll<T>(service: Service): IProvider<T[]>
 export function toAll<T>(service?: Service): IProvider<T[]> {
   if (!isService(service)) throw Error('called "toAll" without a service symbol');
-  return (ctx) => ctx.resolve<T>({ service }).toArray();
+  
+  const provider = ((ctx) => ctx.resolve<T>({ service }).toArray()) as IProvider<T[]>;
+
+  Object.defineProperty(provider, "meta", {
+    value: { name: "toAll", to: service },
+    enumerable: false,
+    configurable: false,
+    writable: false
+  });
+
+  return provider;
 }

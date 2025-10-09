@@ -21,7 +21,7 @@ export type DeferFieldProviders<T> = {
  * 
  * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
 export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>) {
-  return (ctx: IContext) => {
+  const wrappedProvider = ((ctx: IContext) => {
     let kernel = ctx.kernel;
     let resolved = provider(ctx);
     __setImmediate(() => {
@@ -31,5 +31,14 @@ export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>)
       }
     })
     return resolved;
-  };
+  }) as IProvider<T>;
+
+  Object.defineProperty(wrappedProvider, "meta", {
+    value: { name: "defer", provider },
+    enumerable: false,
+    configurable: false,
+    writable: false
+  });
+
+  return wrappedProvider;
 }

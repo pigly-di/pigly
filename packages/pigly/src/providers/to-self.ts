@@ -5,5 +5,12 @@ import { toClass } from "./to-class";
 ///** REQUIRES TRANSFORMER - create a class provider where the constructor arguments are inferable */
 export function toSelf<C extends Constructor>(ctor: C): IProvider<InstanceType<C>>
 export function toSelf<C extends Constructor>(ctor: C, ...providers: ProviderWrap<ConstructorParameters<C>>): IProvider<InstanceType<C>> {
-  return toClass(ctor, ...providers);
+  const provider = toClass(ctor, ...providers);
+
+  // Update the existing meta to include toSelf information
+  if (provider.meta) {
+    provider.meta.name = "toSelf";
+  }
+
+  return provider;
 }

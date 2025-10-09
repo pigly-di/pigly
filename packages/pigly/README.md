@@ -5,7 +5,7 @@ unobtrusive, manually configured, dependency-injection for javascript/typescript
 
 ⚠️⚠️ WARNING: experimental - lock to minor versions ⚠️⚠️
 
-![CircleCI](https://img.shields.io/circleci/build/github/pigly-di/pigly?token=abc123def456) ![npm](https://img.shields.io/npm/v/pigly) ![npm](https://img.shields.io/npm/dm/pigly) ![Codecov](https://img.shields.io/codecov/c/gh/pigly-di/pigly)
+[![CI](https://github.com/pigly-di/pigly/actions/workflows/ci.yml/badge.svg)](https://github.com/pigly-di/pigly/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/pigly)](https://www.npmjs.com/package/pigly) [![npm](https://img.shields.io/npm/dm/pigly)](https://www.npmjs.com/package/pigly) [![codecov](https://codecov.io/gh/pigly-di/pigly/branch/develop/graph/badge.svg)](https://codecov.io/gh/pigly-di/pigly)
 
 
 ## Philosophy 

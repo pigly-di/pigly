@@ -1,6 +1,6 @@
 {
   "name": "pigly",
-  "version": "2.0.0-alpha.8",
+  "version": "2.0.0-alpha.10",
   "main": "dist/cjs/index.js",
   "typings": "dist/cjs/index.d.ts",
   "license": "MIT",
@@ -17,8 +17,7 @@
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.0.0",
     "chai": "^4.3.4",
-    "codecov": "^3.8.1",
-    "mocha": "^8.3.2",
+    "mocha": "^11.7.4",
     "nyc": "^15.1.0",
     "source-map-support": "^0.5.19",
     "ts-node": "^8.1.0",
@@ -30,7 +29,7 @@
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
     "build:pack": "node ./gen-package.mjs",
     "test": "nyc mocha test/**/*.spec.ts",
-    "coverage": "codecov --flags pigly"
+    "coverage": "nyc report --reporter=lcov"
   },
   "nyc": {
     "exclude": [
