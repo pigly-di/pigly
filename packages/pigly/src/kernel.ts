@@ -177,8 +177,9 @@ export abstract class AbstractKernel implements IReadOnlyKernel {
 
   /**
    * Protected method to add a binding - used by derived classes
+   * @param rebind If true, prepends binding (last binding wins). If false (default), appends (resolve in binding order)
    */
-  protected _addBinding<T>(service: Service, provider: IProvider<T>, scope: Scope): IBinding {
+  protected _addBinding<T>(service: Service, provider: IProvider<T>, scope: Scope, rebind: boolean = false): IBinding {
     if (isService(service) === false) {
       throw Error("first argument must be a service type");
     }
@@ -196,8 +197,13 @@ export abstract class AbstractKernel implements IReadOnlyKernel {
 
     let binding = { provider, site, scope };
 
-    // Push to start of array so that last binding is returned first (implicit rebinding)
-    bindings.unshift(binding);
+    if (rebind) {
+      // Prepend: last binding is checked first (rebinding behavior)
+      bindings.unshift(binding);
+    } else {
+      // Append: bindings resolve in order (default behavior)
+      bindings.push(binding);
+    }
 
     this._bindings.set(service, bindings);
 

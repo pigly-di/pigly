@@ -25,9 +25,6 @@ export interface IFluentProviderArgumentBuilder<T> {
   
   /** Add a custom when predicate (wraps provider) */
   when(predicate: (ctx: IContext) => boolean): IFluentProviderArgumentBuilder<T>;
-  
-  /** Get the underlying provider (internal) */
-  _getProvider(): IProvider<T>;
 }
 
 /**
@@ -96,8 +93,6 @@ interface IFluentProviderConstructionMethods<T, R extends { __type: any; __arg: 
  * Fluent provider builder that can construct nested dependencies
  */
 export interface IFluentProviderBuilder<T> extends IFluentProviderConstructionMethods<T, FluentProviderBuilderCtor> {
-  /** Get the underlying provider (internal) */
-  _getProvider(): IProvider<T>;
 }
 
 /**

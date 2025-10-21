@@ -1,4 +1,4 @@
-import { StandardKernel, toClass, to, toConst, Scope } from "../src";
+import { StandardKernel, toClass, to, toConst, Scope, injectedInto, hasAncestor } from "../src";
 import { expect } from 'chai';
 
 interface IFoo {
@@ -94,7 +94,7 @@ describe("StandardKernel Fluent API", () => {
         const $IBar = Symbol.for("IBar");
 
         kernel.bind($IBar).toConst(42);
-        kernel.bind($IBar).toConst(100).when(ctx => ctx.target == "special");
+        kernel.rebind($IBar).toConst(100).when(ctx => ctx.target == "special"); // Use rebind for conditional override
 
         const result = kernel.get<number>($IBar);
 
@@ -268,6 +268,134 @@ describe("StandardKernel Fluent API", () => {
         expect(() => kernel.bind($IFoo).to<IBar>(undefined as any)).to.throw(
             "Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution."
         );
+    });
+
+    describe("Predicates", () => {
+        it("should support injectedInto predicate with fluent API", () => {
+            const kernel = new StandardKernel();
+
+            const $IFoo = Symbol.for("IFoo");
+            const $IBar = Symbol.for("IBar");
+            const $IValue = Symbol.for("IValue");
+
+            // Bind fallback first, then use rebind for conditional override
+            kernel.bind($IValue).toConst(999); // fallback
+            // IValue is directly injected into IBar, so parent.service will be $IBar
+            kernel.rebind($IValue).toConst(200).when(injectedInto($IBar)); // Use rebind for conditional
+
+            // Bar needs IValue
+            kernel.bind($IBar).toClass(Bar, inject => [inject.to($IValue)]);
+            
+            // Foo injects Bar
+            kernel.bind($IFoo).toClass(Foo, inject => [
+                inject.to($IBar)
+            ]);
+
+            const foo = kernel.get<IFoo>($IFoo);
+            const bar = kernel.get<IBar>($IBar);
+
+            // Both should get 200 because IValue is directly injected into Bar
+            expect(foo.bar.value).to.equal(200);
+            expect(bar.value).to.equal(200);
+        });
+
+        it("should support hasAncestor predicate with fluent API", () => {
+            const kernel = new StandardKernel();
+
+            class Container {
+                constructor(public wrapper: Wrapper) {}
+            }
+
+            class Wrapper {
+                constructor(public leaf: Leaf) {}
+            }
+
+            class Leaf {
+                constructor(public value: number) {}
+            }
+
+            const $Container = Symbol.for("Container");
+            const $Wrapper = Symbol.for("Wrapper");
+            const $Leaf = Symbol.for("Leaf");
+            const $Value = Symbol.for("Value");
+
+            // Bind fallback first, then use rebind for conditional override
+            kernel.bind($Value).toConst(500); // fallback
+            kernel.rebind($Value).toConst(1000).when(hasAncestor($Container)); // Use rebind
+
+            kernel.bind($Container).toClass(Container, inject => [inject.to($Wrapper)]);
+            kernel.bind($Wrapper).toClass(Wrapper, inject => [inject.to($Leaf)]);
+            kernel.bind($Leaf).toClass(Leaf, inject => [inject.to($Value)]);
+
+            // When resolved through Container, should use hasAncestor binding
+            const container = kernel.get<Container>($Container);
+            expect(container.wrapper.leaf.value).to.equal(1000);
+
+            // When resolved directly, should use fallback
+            const directWrapper = kernel.get<Wrapper>($Wrapper);
+            expect(directWrapper.leaf.value).to.equal(500);
+
+            const directLeaf = kernel.get<Leaf>($Leaf);
+            expect(directLeaf.value).to.equal(500);
+        });
+
+        it("should handle injectedInto with .as() parameter names", () => {
+            const kernel = new StandardKernel();
+
+            class Config {
+                constructor(public dbUrl: string, public apiUrl: string) {}
+            }
+
+            const $Config = Symbol.for("Config");
+            const $String = Symbol.for("String");
+
+            // Bind fallback first, then use rebind for conditionals
+            kernel.bind($String).toConst("fallback");
+            
+            kernel.rebind($String)
+                .toConst("api://example.com")
+                .when(ctx => ctx.target === "apiUrl");
+            
+            kernel.rebind($String)
+                .toConst("db://localhost")
+                .when(ctx => ctx.target === "dbUrl");
+
+            kernel.bind($Config).toClass(Config, inject => [
+                inject.to<string>($String).as("dbUrl"),
+                inject.to<string>($String).as("apiUrl")
+            ]);
+
+            const config = kernel.get<Config>($Config);
+            expect(config.dbUrl).to.equal("db://localhost");
+            expect(config.apiUrl).to.equal("api://example.com");
+        });
+
+        it("should support chained when predicates acting as AND", () => {
+            const kernel = new StandardKernel();
+
+            const $IBar = Symbol.for("IBar");
+            const $IFoo = Symbol.for("IFoo");
+
+            // Bind fallback first, then use rebind for conditional
+            kernel.bind($IBar).toConst({ value: 42 } as IBar); // fallback
+            
+            // Both conditions must be true - use rebind
+            kernel.rebind($IBar)
+                .toConst({ value: 777 } as IBar)
+                .when(injectedInto($IFoo))
+                .when(ctx => ctx.target === "special");
+
+            kernel.bind($IFoo).toClass(Foo, inject => [
+                inject.to<IBar>($IBar).as("special")
+            ]);
+
+            const foo = kernel.get<IFoo>($IFoo);
+            expect(foo.bar.value).to.equal(777); // Both conditions met
+
+            // Direct resolution should use fallback
+            const directBar = kernel.get<IBar>($IBar);
+            expect(directBar.value).to.equal(42);
+        });
     });
 });
 

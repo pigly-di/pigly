@@ -15,24 +15,31 @@ import { toClass as toClassProvider } from "./providers/to-class";
 import { toSelf as toSelfProvider } from "./providers/to-self";
 
 /**
+ * Private symbol for accessing the provider from fluent builders
+ * This keeps the provider hidden from end users while allowing internal access
+ * @internal
+ */
+const PROVIDER_SYMBOL = Symbol('pigly.provider');
+
+/**
  * Fluent provider argument builder - supports .as() for parameter names and .when() for predicates
  */
 class FluentProviderArgumentBuilder<T> implements IFluentProviderArgumentBuilder<T> {
-  constructor(private provider: IProvider<T>) {}
+  private [PROVIDER_SYMBOL]: IProvider<T>;
+
+  constructor(provider: IProvider<T>) {
+    this[PROVIDER_SYMBOL] = provider;
+  }
 
   as(parameterName: string): IProviderWithMetadata<T> {
     return {
-      provider: this.provider,
+      provider: this[PROVIDER_SYMBOL],
       target: parameterName
     };
   }
 
   when(predicate: (ctx: IContext) => boolean): IFluentProviderArgumentBuilder<T> {
-    return new FluentProviderArgumentBuilder(when(predicate, this.provider));
-  }
-
-  _getProvider(): IProvider<T> {
-    return this.provider;
+    return new FluentProviderArgumentBuilder(when(predicate, this[PROVIDER_SYMBOL]));
   }
 }
 
@@ -40,7 +47,11 @@ class FluentProviderArgumentBuilder<T> implements IFluentProviderArgumentBuilder
  * Fluent provider builder implementation
  */
 class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
-  constructor(private provider: IProvider<T>) {}
+  private [PROVIDER_SYMBOL]: IProvider<T>;
+
+  constructor(provider: IProvider<T>) {
+    this[PROVIDER_SYMBOL] = provider;
+  }
 
   to<U>(service?: Service): IFluentProviderBuilder<U> {
     if (!isService(service)) {
@@ -54,14 +65,8 @@ class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
     builder: (inject: IFluentProviderBuilderFactory<any>) => [...FluentProviderBuilderWrap<ConstructorParameters<C>>]
   ): IFluentProviderBuilder<InstanceType<C>> {
     const providerBuilders = builder(providerBuilderFactory);
-    // Builder returns array that could contain IFluentProviderArgumentBuilder or IProviderWithMetadata
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        // Check if it's already metadata (from .as()) or needs conversion
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      }) as any;
+      .map(extractProviderFromBuilder) as any;
     return new FluentProviderBuilder(toClassProvider(ctor, ...providers)) as unknown as IFluentProviderBuilder<InstanceType<C>>;
   }
 
@@ -83,21 +88,27 @@ class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
   ): IFluentProviderBuilder<ReturnType<F>> {
     const providerBuilders = builder(providerBuilderFactory);
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      }) as any;
+      .map(extractProviderFromBuilder) as any;
     return new FluentProviderBuilder(toFuncProvider(func, ...providers)) as unknown as IFluentProviderBuilder<ReturnType<F>>;
   }
 
   use(provider: IProvider<T>): IFluentProviderBuilder<T> {
     return new FluentProviderBuilder(provider);
   }
+}
 
-  _getProvider(): IProvider<T> {
-    return this.provider;
+/**
+ * Helper function to extract provider from fluent builder or metadata object
+ * @internal
+ */
+function extractProviderFromBuilder(item: IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>): IProvider<any> | IProviderWithMetadata<any> {
+  // Check if it's already metadata (from .as())
+  // Only need to check for 'provider' property since target is optional
+  if ('provider' in item && typeof (item as any).provider === 'function') {
+    return item as IProviderWithMetadata<any>;
   }
+  // Extract provider using symbol
+  return (item as any)[PROVIDER_SYMBOL];
 }
 
 /**
@@ -117,11 +128,7 @@ class FluentProviderBuilderFactoryImpl implements IFluentProviderBuilderFactory<
   ): IFluentProviderArgumentBuilder<InstanceType<C>> {
     const providerBuilders = builder(this);
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      }) as any;
+      .map(extractProviderFromBuilder) as any;
     return new FluentProviderArgumentBuilder(toClassProvider(ctor, ...providers));
   }
 
@@ -143,11 +150,7 @@ class FluentProviderBuilderFactoryImpl implements IFluentProviderBuilderFactory<
   ): IFluentProviderArgumentBuilder<ReturnType<F>> {
     const providerBuilders = builder(this);
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      }) as any;
+      .map(extractProviderFromBuilder) as any;
     return new FluentProviderArgumentBuilder(toFuncProvider(func, ...providers));
   }
 
@@ -165,7 +168,8 @@ const providerBuilderFactory = new FluentProviderBuilderFactoryImpl();
 class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelection<T> {
   constructor(
     private kernel: StandardKernel,
-    private service: Service
+    private service: Service,
+    private rebind: boolean = false
   ) {}
 
   to<U = T>(targetService?: Service): IFluentBindingConditionsScope<U> {
@@ -173,7 +177,7 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
       throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
     }
     const provider = to<U>(targetService);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<U>(binding);
   }
 
@@ -183,19 +187,15 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
   ): IFluentBindingConditionsScope<InstanceType<C>> {
     const providerBuilders = builder(providerBuilderFactory);
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      });
+      .map(extractProviderFromBuilder);
     const provider = toClassProvider(ctor, ...providers as any);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<InstanceType<C>>(binding);
   }
 
   toSelf<C extends Constructor>(ctor: C): IFluentBindingConditionsScope<InstanceType<C>> {
     const provider = toSelfProvider(ctor);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<InstanceType<C>>(binding);
   }
 
@@ -205,19 +205,15 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
   ): IFluentBindingConditionsScope<ReturnType<F>> {
     const providerBuilders = builder(providerBuilderFactory);
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
-      .map(item => {
-        return 'provider' in item && 'target' in item 
-          ? item as IProviderWithMetadata<any>
-          : (item as IFluentProviderArgumentBuilder<any>)._getProvider();
-      });
+      .map(extractProviderFromBuilder);
     const provider = toFuncProvider(func, ...providers as any);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<ReturnType<F>>(binding);
   }
 
   toConst<U = T>(value: U): IFluentBindingConditionsScope<U> {
     const provider = toConst(value);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<U>(binding);
   }
 
@@ -225,7 +221,7 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
     if (!isProvider(provider)) {
       throw Error("argument must be a provider function");
     }
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
+    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<U>(binding);
   }
 }
@@ -264,7 +260,8 @@ class FluentBindingConditionsScope<T> implements IFluentBindingConditionsScope<T
 
 /**
  * Standard kernel with fluent binding API. 
- * Note: subsequent calls to bind with the same service will act as a rebinding, such that the latest binding is used first. 
+ * Bindings resolve in the order they are added.
+ * Use rebind() to replace existing bindings (last binding wins).
  */
 export class StandardKernel extends AbstractKernel {
   /**Bind a Symbol to a provider using fluent interface */
@@ -277,15 +274,28 @@ export class StandardKernel extends AbstractKernel {
       throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
     }
     
-    return new FluentBindingProviderSelection<T>(this, service);
+    return new FluentBindingProviderSelection<T>(this, service, false);
+  }
+
+  /**Rebind a Symbol to a provider using fluent interface - prepends binding so it's checked first */
+  rebind<T>(service: Service): IFluentBindingProviderSelection<T>;
+  /**Rebind interface T to a provider using fluent interface - note requires compile-time @pigly/transformer */
+  rebind<T>(): IFluentBindingProviderSelection<T>;
+  /** runtime method */
+  rebind<T>(service?: Service): IFluentBindingProviderSelection<T> {
+    if (!isService(service)) {
+      throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
+    }
+    
+    return new FluentBindingProviderSelection<T>(this, service, true);
   }
 
   /**
    * Internal method to add a binding - used by fluent interface
    * @internal
    */
-  _addBinding<T>(service: Service, provider: IProvider<T>, scope: Scope): IBinding {
+  _addBinding<T>(service: Service, provider: IProvider<T>, scope: Scope, rebind: boolean = false): IBinding {
     // Call parent's protected method
-    return super._addBinding(service, provider, scope);
+    return super._addBinding(service, provider, scope, rebind);
   }
 }

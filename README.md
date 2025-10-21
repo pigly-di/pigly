@@ -25,17 +25,21 @@ class Axe implements IWeapon {
   name = "axe";
 }
 
-let kernel = new Kernel();
+const kernel = new StandardKernel();
 
-kernel.bind<INinja>(toSelf(Ninja));
-kernel.bind<IWeapon>(toSelf(Axe));
+kernel.bind<INinja>().toSelf(Ninja);
+kernel.bind<IWeapon>().toSelf(Axe);
 
-let ninja = kernel.get<INinja>();
+const ninja = kernel.get<INinja>();
 ```
 
 ## Planned features
 
 * Better inferring of constructors
+
+## Migrating from Legacy Kernel
+
+If you're upgrading from the legacy `Kernel` API, see **[MIGRATING.md](./MIGRATING.md)** for a complete migration guide.
 
 ## Native Usage
 
@@ -44,21 +48,22 @@ native usage relates to using this package directly without any typescript trans
 Its pretty simple: create a kernel, create symbol-to-provider bindings, then get the resolved result with `get(symbol)` 
 
 ```ts
-import { Kernel } from 'pigly';
+import { StandardKernel } from 'pigly';
 
-let kernel = new Kernel();
+const kernel = new StandardKernel();
 
-kernel.bind(Symbol.for("Foo"), (ctx)=>{ return "foo" });
+kernel.bind(Symbol.for("Foo")).toFunc(() => "foo");
 
-let foo = kernel.get(Symbol.for("Foo"));
+const foo = kernel.get(Symbol.for("Foo"));
 ```
 
-### .bind(symbol, provider)
+### .bind(symbol)
 
-bind links a specific symbol to a provider of the form (context)=>value;
+bind returns a fluent builder for configuring how a symbol resolves. Chain with `.toClass()`, `.toFunc()`, `.toConst()`, etc.
 
 ```ts
-kernel.bind(A, _=>{ return "hello world" })
+const A = Symbol.for("A");
+kernel.bind(A).toFunc(() => "hello world");
 ```
 
 ### .get(symbol)
@@ -66,12 +71,12 @@ kernel.bind(A, _=>{ return "hello world" })
 resolve all the bindings for a symbol and return the first one
 
 ```ts
-const A = Symbol.for("A")
+const A = Symbol.for("A");
 
-kernel.bind(A, _=> "hello");
-kernel.bind(A, _=> " world");
+kernel.bind(A).toConst("hello");
+kernel.bind(A).toConst(" world");
 
-let result = kernel.get(A); // "hello";
+const result = kernel.get(A); // "hello";
 ```
 
 ### .getAll(symbol)
@@ -79,231 +84,239 @@ let result = kernel.get(A); // "hello";
 resolve all the bindings for a symbol and return all of the results. 
 
 ```ts
-const A = Symbol.for("A")
+const A = Symbol.for("A");
 
-kernel.bind(A, _=> "hello");
-kernel.bind(A, _=> " world");
+kernel.bind(A).toConst("hello");
+kernel.bind(A).toConst(" world");
 
-let results = kernel.getAll(A); // ["hello", " world"];
+const results = kernel.getAll(A); // ["hello", " world"];
 ```
 
 ## Providers
 
-### to(symbol)
+### .to() (with transformer) or inject.to()
 
-used to redirect a binding to and resolve it through a different symbol. 
-
-```ts
-const A = Symbol.for("A")
-const B = Symbol.for("B")
-
-kernel.bind(A, to(B));
-kernel.bind(B, _ => "hello world");
-```
-
-### toAll(symbol)
-
-used to resolve a symbol to all its bindings
-
-```ts
-const A = Symbol.for("A")
-const B = Symbol.for("B");
-
-kernel.bind(A, _ => "hello");
-kernel.bind(A, _ => "world");
-kernel.bind(B, toAll(A));
-
-kernel.get(B); // ["hello", "world"]
-
-```
-
-### toClass(Ctor, ...providers)
-
-used to provide an instantiation of a class. first parameter should be the class constructor and then it takes a list of providers that will be used, in the given order, to resolve the constructor arguments.  
-
-```ts
-class Foo{
-  constructor(public message: string)
-}
-
-const A = Symbol.for("A")
-const B = Symbol.for("B")
-
-kernel.bind(B, _=>"hello world");
-kernel.bind(A, toClass(Foo, to(B)))
-```
-
-### toConst(value)
-
-a more explicit way to provide a constant
-
-```ts
-kernel.bind(B, toConst("hello world"));
-```
-
-### asSingleton(provider)
-
-used to cache the output of the given provider so that subsequent requests will return the same result. 
+Used to redirect a binding to resolve through a different symbol. With the transformer, use `.to<T>()`. For manual dependency injection, use the `inject` parameter.
 
 ```ts
 const A = Symbol.for("A");
 const B = Symbol.for("B");
 
-kernel.bind(A, toClass(Foo));
-kernel.bind(B, asSingleton(to(A)));
+kernel.bind(A).toClass(Foo, inject => [inject.to(B)]);
+kernel.bind(B).toConst("hello world");
 ```
 
-### when(predicate, provider)
+### inject.toAll()
 
-used to predicate a provider for some condition. **any provider that explicitly returns `undefined` is ignored**
+Used to resolve a symbol to all its bindings.
+
+```ts
+const A = Symbol.for("A");
+const B = Symbol.for("B");
+
+kernel.bind(A).toConst("hello");
+kernel.bind(A).toConst("world");
+kernel.bind(B).toClass(Foo, inject => [inject.toAll(A)]);
+
+kernel.get(B); // Foo instance with ["hello", "world"] as constructor arg
+```
+
+### .toClass(Ctor, dependencies?)
+
+Used to instantiate a class. Takes the constructor and an optional function that receives an `inject` helper to resolve dependencies.
+
+```ts
+class Foo {
+  constructor(public message: string) {}
+}
+
+const A = Symbol.for("A");
+const B = Symbol.for("B");
+
+kernel.bind(B).toConst("hello world");
+kernel.bind(A).toClass(Foo, inject => [inject.to(B)]);
+```
+
+### .toConst(value)
+
+Binds a constant value.
+
+```ts
+const B = Symbol.for("B");
+kernel.bind(B).toConst("hello world");
+```
+
+### .inSingletonScope()
+
+Caches the resolution so subsequent requests return the same instance.
+
+```ts
+const A = Symbol.for("A");
+
+kernel.bind(A).toClass(Foo).inSingletonScope();
+
+const a = kernel.get(A);
+const b = kernel.get(A);
+assert(a === b); // true
+```
+
+### .when(predicate)
+
+Conditionally applies a binding. **Any provider that returns `undefined` is ignored.**
 
 ```ts
 const A = Symbol.for("A");
 const B = Symbol.for("B");
 const C = Symbol.for("C");
 
-kernel.bind(A, toClass(Foo, to(C) ));
-kernel.bind(B, toClass(Foo, to(C) ));
+kernel.bind(A).toClass(Foo, inject => [inject.to(C)]);
+kernel.bind(B).toClass(Foo, inject => [inject.to(C)]);
 
-kernel.bind(C, when(x=>x.parent.target == A, toConst("a")));
-kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
+kernel.bind(C).toConst("a").when(ctx => ctx.parent?.target === A);
+kernel.bind(C).toConst("b").when(ctx => ctx.parent?.target === B);
 ```
 
-### defer(provider, opts: {[field] : provider})
-Used to defer injection (lazy injection) into the created object. This allows you to work around cyclic dependencies, by having one of them lazy inject into the other. You MUST be careful to ensure you're injecting constants or singletons, otherwise you can still cause a cyclic-loop. 
+### .toDefer(Ctor, dependencies, deferred)
 
-```
+Defers injection (lazy injection) into created objects. Works around cyclic dependencies by lazy-injecting one dependency. **IMPORTANT:** Must use singletons to avoid cyclic loops.
+
+```ts
 class Foo {
-  constructor(public bar: Bar) { }
+  constructor(public bar: Bar) {}
 }
 
 class Bar {
-  foo: Foo;
-  constructor() { }
+  foo!: Foo;
+  constructor() {}
 }
 
 const $Foo = Symbol.for("Foo");
 const $Bar = Symbol.for("Bar");
 
-kernel.bind($Foo, 
-  /* IMPORTANT */
-  asSingleton(
-    toClass(Foo, to($Bar))
-  ));
-    
-kernel.bind($Bar, 
-  /* IMPORTANT */
-  asSingleton(   
-    defer(
-      toClass(Bar),
-      {
-        foo: to($Foo)
-      }
-    )));
+kernel.bind($Foo)
+  .toClass(Foo, inject => [inject.to($Bar)])
+  .inSingletonScope(); // IMPORTANT
 
-let foo = kernel.get<Foo>($Foo);
-let bar = kernel.get<Bar>($Bar);
+kernel.bind($Bar)
+  .toDefer(Bar, () => [], { foo: inject => inject.to($Foo) })
+  .inSingletonScope(); // IMPORTANT
+
+const foo = kernel.get($Foo);
+const bar = kernel.get($Bar);
 ```
 
 
 ## Predicates
 
-### injectedInto(symbol)
+### injectedInto(symbol) (predicate)
 
-returns true if `ctx.parent.target == symbol`
+Returns true if `ctx.parent?.target === symbol`. Use with `.when()`.
 
 ```ts
+import { injectedInto } from 'pigly';
+
 const A = Symbol.for("A");
 const B = Symbol.for("B");
 const C = Symbol.for("C");
 
-kernel.bind(A, toClass(Foo, to(C) ));
-kernel.bind(B, toClass(Foo, to(C) ));
+kernel.bind(A).toClass(Foo, inject => [inject.to(C)]);
+kernel.bind(B).toClass(Foo, inject => [inject.to(C)]);
 
-kernel.bind(C, when(injectedInto(A), toConst("a")));
-kernel.bind(C, when(injectedInto(B), toConst("b")));
+kernel.bind(C).toConst("a").when(injectedInto(A));
+kernel.bind(C).toConst("b").when(injectedInto(B));
 ```
 
-### hasAncestor(symbol)
+### hasAncestor(symbol) (predicate)
 
-returns true if an request ancestor is equal to the symbol. 
+Returns true if any request ancestor equals the symbol. Use with `.when()`.
 
 ```ts
-  const A = Symbol.for("A");
-  const B = Symbol.for("B");
-  const C = Symbol.for("C");
+import { hasAncestor } from 'pigly';
 
-  kernel.bind(A, when(hasAncestor(C), toConst("foo")));
-  kernel.bind(A, toConst("bar")));  
-  kernel.bind(B, to(A));
-  kernel.bind(C, to(B));
+const A = Symbol.for("A");
+const B = Symbol.for("B");
+const C = Symbol.for("C");
 
-  let c = kernel.get(C); // "foo"
-  let b = kernel.get(B); // "bar"
+kernel.bind(A).toConst("foo").when(hasAncestor(C));
+kernel.bind(A).toConst("bar");
+kernel.bind(B).toClass(Wrapper, inject => [inject.to(A)]);
+kernel.bind(C).toClass(Container, inject => [inject.to(B)]);
+
+const c = kernel.get(C); // A resolves to "foo"
+const b = kernel.get(B); // A resolves to "bar"
 ```
 
 ## Transformer Usage
 
-with '@pigly/transformer' installed (see https://github.com/pigly-di/pigly/tree/develop/packages/pigly-transformer) you are able to omit manually creating a symbol. Currently 
+With `@pigly/transformer` installed (see [transformer README](https://github.com/pigly-di/pigly/tree/develop/packages/pigly-transformer)), you can omit manually creating symbols. The transformer converts type parameters to `Symbol.for()` calls at compile time.
 
-* `.bind<T>(provider)` 
-* `.get<T>()`
-* `to<T>()`
-* `toAll<T>()`
-* `toSelf<T>(Class)`
-* `injectedInto<T>()`
-* `hasAncestor<T>()`
-* `Inject<T>()`
-
-are supported. 
+**Supported transformations:**
+* `kernel.bind<T>()` → `kernel.bind(Symbol.for("T"))`
+* `kernel.get<T>()` → `kernel.get(Symbol.for("T"))`
+* `kernel.getAll<T>()` → `kernel.getAll(Symbol.for("T"))`
+* `kernel.resolve<T>()` → `kernel.resolve(Symbol.for("T"))`
+* `inject.to<T>()` → `inject.to(Symbol.for("T"))`
+* `injectedInto<T>()` → `injectedInto(Symbol.for("T"))`
+* `hasAncestor<T>()` → `hasAncestor(Symbol.for("T"))`
+* `SymbolFor<T>()` → `Symbol.for("T")` 
 
 ### Example
 
 ```ts
-class Foo implements IFoo{
-  constructor(public name: string){}
+import { StandardKernel, injectedInto } from 'pigly';
+
+class Foo implements IFoo {
+  constructor(public name: string) {}
 }
 
-let kernel = new Kernel();
+const kernel = new StandardKernel();
 
-kernel.bind(toSelf(Foo));
+kernel.bind<Foo>().toSelf(Foo);
 
-kernel.bind<string>(
-  when(injectedInto<Foo>(
-    toConst("joe")));
+kernel.bind<string>()
+  .toConst("joe")
+  .when(injectedInto<Foo>());
 
-kernel.bind<IFoo>(to<Foo>());
+kernel.bind<IFoo>().toClass(Foo, inject => [inject.to<string>()]);
 
-let foo = kernel.get<IFoo>();
+const foo = kernel.get<IFoo>();
 ```
 
-## toSelf<T>(Class)
+## .toSelf(Class)
 
-attempts to infer the constructor arguments and generate the providers needed to initialise the class. It can only do so if the constructor arguments are simple. Currently only supports the _first_ constructor. 
+Automatically infers constructor arguments and generates the needed providers. Only works with simple constructor signatures (interfaces/classes). Uses the first constructor only.
 
 ```ts
-kernel.bind(toSelf(Foo));
+kernel.bind<IFoo>().toSelf(Foo);
 ```
-is equivalent to 
+
+With the transformer, this is equivalent to:
+
 ```ts
-kernel.bind(toClass(Foo, to<IBar>, to...
+kernel.bind<IFoo>().toClass(Foo, inject => [
+  inject.to<IBar>(),
+  inject.to<IBaz>(),
+  // ... for each constructor parameter
+]);
 ```
 
 
 ## SymbolFor<T>()
 
-calls to SymbolFor<T>() get replaced with `symbol.for("<T>")` through `@pigly/transformer` and can be used if you want to be closer to the native usage i.e.  
+The transformer converts `SymbolFor<T>()` to `Symbol.for("T")`. Useful when you want explicit symbol references.
 
 ```ts
-let kernel = new Kernel();
+import { StandardKernel, SymbolFor } from 'pigly';
+
+const kernel = new StandardKernel();
 
 const $IFoo = SymbolFor<IFoo>();
 const $IBar = SymbolFor<IBar>();
 
-kernel.bind<IFoo>($IFoo, toClass(Foo, to<IBar>($IBar)));
-kernel.bind<IBar>($IBar, toClass(Bar));
+kernel.bind($IFoo).toClass(Foo, inject => [inject.to($IBar)]);
+kernel.bind($IBar).toClass(Bar);
 
-let foo = kernel.get<IFoo>($IFoo);
+const foo = kernel.get($IFoo);
 ```
 
 The current approach in the transformer, to make the type's symbol, is to use the imported name directly i.e. `SymbolFor<IFoo>()` is converted to `Symbol.for("IFoo")`. The intention here is to give most flexibility and consistently in how the Symbols are created, especially if you want to configure a container across multiple independently-compiled libraries, or when using the transformer in a "transform only" build stage, as is typically the case with Webpack and Vue. The downside is that you must be consistent with type names, avoid renaming during imports and do not implement two or more interfaces with the exact same identifier-name. 

@@ -9,7 +9,7 @@ export function to<T>(service?: Service): IProvider<T> {
   if (!isService(service)) throw Error('called "to" without a service symbol');
 
   // create the provider instance and attach metadata to the instance
-  const provider = ((ctx) => ctx.resolve<T>({service}).first()) as IProvider<T>;
+  const provider = ((ctx) => ctx.resolve<T>({service, target: ctx.target}).first()) as IProvider<T>;
 
   // provide some basic metadata about this provider
   Object.defineProperty(provider, "meta", {

@@ -54,17 +54,17 @@ describe("Kernel Basics", () => {
     expect(result, "result is 10").is.equal(10);
   })
 
-  it("can multi-bind but get returns last binding", () => {
+  it("can multi-bind but get returns first binding", () => {
     const kernel = new Kernel();
 
     const $IFoo = Symbol.for("IFoo");
 
     kernel.bind($IFoo, _ => 10);
-    kernel.bind($IFoo, _ => 11);
+    kernel.bind($IFoo, _ => 11, Scope.Transient);
 
     let result = kernel.get<number>($IFoo);
 
-    expect(result, "result is 11").to.eql(11);
+    expect(result, "result is 10").to.eql(10);
   })
 
   it("can multi-bind and resolve all ", () => {
@@ -73,7 +73,7 @@ describe("Kernel Basics", () => {
     const $IFoo = Symbol.for("IFoo");
 
     kernel.bind($IFoo, _ => 10);
-    kernel.bind($IFoo, _ => 11);
+    kernel.bind($IFoo, _ => 11, Scope.Transient);
 
     let result = [];
 
@@ -81,7 +81,7 @@ describe("Kernel Basics", () => {
       result.push(item);
     }
 
-    expect(result, "result is [11 10]").to.eql([11, 10]);
+    expect(result, "result is [10 11]").to.eql([10, 11]);
   })
 
   it("should ignore providers returning undefined", () => {
@@ -275,7 +275,7 @@ describe("Providers", () => {
 
     let foo = kernel.getAll<IFoo>($IFoo);
 
-    expect(foo, "result is array").is.eql([3, 2, 1])
+    expect(foo, "result is array").is.eql([1, 2, 3]) // Now resolves in binding order
   })
 })
 
@@ -405,10 +405,11 @@ describe("Predicates", () => {
       const B = Symbol.for("B");
       const C = Symbol.for("C");
 
-      // initial binding to fallback to 
-      kernel.bind(A, toConst("bar"));
+
       // the rebinding with condition that will be used when ancestor matches
-      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")), Scope.Transient)
+      kernel.bind(A, toConst("bar")); // fallback when above condition not met
+
       kernel.bind(B, to(A));
       kernel.bind(C, to(B));
 
