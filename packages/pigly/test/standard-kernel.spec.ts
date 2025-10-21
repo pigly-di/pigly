@@ -93,12 +93,17 @@ describe("StandardKernel Fluent API", () => {
 
         const $IBar = Symbol.for("IBar");
 
-        kernel.bind($IBar).toConst(100).when(ctx => ctx.target === "special");
         kernel.bind($IBar).toConst(42);
+        kernel.bind($IBar).toConst(100).when(ctx => ctx.target == "special");
 
         const result = kernel.get<number>($IBar);
 
+        const resolution = kernel.resolve({ target: "special", service: $IBar });
+
+        const result2 = resolution.first();
+
         expect(result).to.equal(42); // Default binding
+        expect(result2).to.equal(100); // Special binding
     });
 
     it("should support chaining when and scope", () => {
@@ -240,6 +245,29 @@ describe("StandardKernel Fluent API", () => {
         expect(result.bar).to.be.instanceOf(BarWithBaz);
         expect(result.bar.baz).to.be.instanceOf(Baz);
         expect(result.bar.baz.multiplier).to.equal(42);
+    });
+
+    it("should throw error when Service parameter is missing (runtime validation)", () => {
+        const kernel = new StandardKernel();
+
+        // Test bind() without service
+        expect(() => kernel.bind<IFoo>(undefined as any)).to.throw(
+            "Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution."
+        );
+
+        // Test to() without service in builder
+        const $IFoo = Symbol.for("IFoo");
+        kernel.bind($IFoo).toClass(Foo, inject => {
+            expect(() => inject.to<IBar>(undefined as any)).to.throw(
+                "Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution."
+            );
+            return [inject.toConst({ value: 42 } as IBar)];
+        });
+
+        // Test to() without service in binding
+        expect(() => kernel.bind($IFoo).to<IBar>(undefined as any)).to.throw(
+            "Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution."
+        );
     });
 });
 

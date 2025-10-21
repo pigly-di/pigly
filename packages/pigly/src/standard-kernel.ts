@@ -43,7 +43,10 @@ class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
   constructor(private provider: IProvider<T>) {}
 
   to<U>(service?: Service): IFluentProviderBuilder<U> {
-    return new FluentProviderBuilder(to<U>(service!)) as unknown as IFluentProviderBuilder<U>;
+    if (!isService(service)) {
+      throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
+    }
+    return new FluentProviderBuilder(to<U>(service)) as unknown as IFluentProviderBuilder<U>;
   }
 
   toClass<C extends Constructor>(
@@ -102,7 +105,10 @@ class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
  */
 class FluentProviderBuilderFactoryImpl implements IFluentProviderBuilderFactory<any> {
   to<U>(service?: Service): IFluentProviderArgumentBuilder<U> {
-    return new FluentProviderArgumentBuilder(to<U>(service!));
+    if (!isService(service)) {
+      throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
+    }
+    return new FluentProviderArgumentBuilder(to<U>(service));
   }
 
   toClass<C extends Constructor>(
@@ -163,7 +169,10 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
   ) {}
 
   to<U = T>(targetService?: Service): IFluentBindingConditionsScope<U> {
-    const provider = to<U>(targetService!);
+    if (!isService(targetService)) {
+      throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
+    }
+    const provider = to<U>(targetService);
     const binding = this.kernel._addBinding(this.service, provider, Scope.Transient);
     return new FluentBindingConditionsScope<U>(binding);
   }
@@ -254,7 +263,8 @@ class FluentBindingConditionsScope<T> implements IFluentBindingConditionsScope<T
 }
 
 /**
- * Standard kernel with fluent binding API
+ * Standard kernel with fluent binding API. 
+ * Note: subsequent calls to bind with the same service will act as a rebinding, such that the latest binding is used first. 
  */
 export class StandardKernel extends AbstractKernel {
   /**Bind a Symbol to a provider using fluent interface */
@@ -264,7 +274,7 @@ export class StandardKernel extends AbstractKernel {
   /** runtime method */
   bind<T>(service?: Service): IFluentBindingProviderSelection<T> {
     if (!isService(service)) {
-      throw Error("first argument must be a service type");
+      throw new Error("Service parameter is required. Either provide a Symbol or use @pigly/transformer for type-based resolution.");
     }
     
     return new FluentBindingProviderSelection<T>(this, service);

@@ -50,7 +50,7 @@ describe("Error Messages with Provider Metadata", () => {
       // Note: The 'to' provider for IValue doesn't show because the error happens
       // before we even create a context for IValue (no bindings exist)
       
-      console.log("\nResolveError message:\n" + message);
+      //console.log("\nResolveError message:\n" + message);
     }
   });
 
@@ -81,7 +81,7 @@ describe("Error Messages with Provider Metadata", () => {
       expect(message).to.include("[via to (C)]");
       expect(message).to.include("[via to (B)]");
       
-      console.log("\nCyclicError message:\n" + message);
+      //console.log("\nCyclicError message:\n" + message);
     }
   });
 
@@ -107,7 +107,7 @@ describe("Error Messages with Provider Metadata", () => {
       // Should show the 'to' provider
       expect(message).to.include("[via to");
       
-      console.log("\nError with toClass and to providers:\n" + message);
+      //console.log("\nError with toClass and to providers:\n" + message);
     }
   });
 
@@ -136,7 +136,7 @@ describe("Error Messages with Provider Metadata", () => {
       // Should work even without provider metadata
       expect(message).to.include("Resolution chain");
       
-      console.log("\nError with custom provider (no metadata):\n" + message);
+      //console.log("\nError with custom provider (no metadata):\n" + message);
     }
   });
 });

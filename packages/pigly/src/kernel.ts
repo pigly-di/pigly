@@ -102,10 +102,14 @@ export abstract class AbstractKernel implements IReadOnlyKernel {
           request,
           parent: request.parent,
           service: request.service,
+          target: request.target,  // Copy target from request
           binding: binding,
           resolve: null,
           createContext: function (_ctx: Partial<IContext>) {
             let result = Object.assign({}, ctx, _ctx, { parent: ctx });
+            if (!_ctx || !('target' in _ctx)) {
+              result.target = undefined;
+            }
             result.resolve = resolve.bind(result);
             return result
           }
