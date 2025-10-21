@@ -1,4 +1,4 @@
-import { StandardKernel, Scope, SymbolFor, injectedInto } from 'pigly';
+import { StandardKernel, Scope, SymbolFor, injectedInto, Constructor } from 'pigly';
 
 interface ILogger {
   log(message: string): void;
@@ -19,15 +19,11 @@ class Application {
 }
 
 function main() {
-  const kernel = new StandardKernel();
+  const kernel = new StandardKernel()
 
   // Using transformer: bind<T>() auto-converts to bind(Symbol.for("T"))
-  kernel.bind<ILogger>().toClass(ConsoleLogger, () => []).inSingletonScope();
-
-  // toSelf also works
-  kernel
-    .bind<Application>()
-    .toSelf(Application);
+  kernel.bind<ILogger>().to<ConsoleLogger>();
+  kernel.bind<ConsoleLogger>().toClass(ConsoleLogger, ()=>[]).inSingletonScope();
 
   // Alternative: Using explicit symbols
   const $App = SymbolFor<Application>();
@@ -37,6 +33,3 @@ function main() {
 }
 
 console.log(main.toString());
-
-main();
-

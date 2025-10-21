@@ -12,7 +12,6 @@ import { to } from "./providers/to";
 import { toConst } from "./providers/to-const";
 import { toFunc as toFuncProvider } from "./providers/to-func";
 import { toClass as toClassProvider } from "./providers/to-class";
-import { toSelf as toSelfProvider } from "./providers/to-self";
 
 /**
  * Private symbol for accessing the provider from fluent builders
@@ -74,10 +73,6 @@ class FluentProviderBuilder<T> implements IFluentProviderBuilder<T> {
     return new FluentProviderBuilder(toConst(value)) as unknown as IFluentProviderBuilder<U>;
   }
 
-  toSelf<C extends Constructor>(ctor: C): IFluentProviderBuilder<InstanceType<C>> {
-    return new FluentProviderBuilder(toSelfProvider(ctor)) as unknown as IFluentProviderBuilder<InstanceType<C>>;
-  }
-
   toProvider<U = T>(provider: IProvider<U>): IFluentProviderBuilder<U> {
     return new FluentProviderBuilder(provider) as unknown as IFluentProviderBuilder<U>;
   }
@@ -136,10 +131,6 @@ class FluentProviderBuilderFactoryImpl implements IFluentProviderBuilderFactory<
     return new FluentProviderArgumentBuilder(toConst(value));
   }
 
-  toSelf<C extends Constructor>(ctor: C): IFluentProviderArgumentBuilder<InstanceType<C>> {
-    return new FluentProviderArgumentBuilder(toSelfProvider(ctor));
-  }
-
   toProvider<U>(provider: IProvider<U>): IFluentProviderArgumentBuilder<U> {
     return new FluentProviderArgumentBuilder(provider);
   }
@@ -189,12 +180,6 @@ class FluentBindingProviderSelection<T> implements IFluentBindingProviderSelecti
     const providers = ([...providerBuilders] as (IFluentProviderArgumentBuilder<any> | IProviderWithMetadata<any>)[])
       .map(extractProviderFromBuilder);
     const provider = toClassProvider(ctor, ...providers as any);
-    const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
-    return new FluentBindingConditionsScope<InstanceType<C>>(binding);
-  }
-
-  toSelf<C extends Constructor>(ctor: C): IFluentBindingConditionsScope<InstanceType<C>> {
-    const provider = toSelfProvider(ctor);
     const binding = this.kernel._addBinding(this.service, provider, Scope.Transient, this.rebind);
     return new FluentBindingConditionsScope<InstanceType<C>>(binding);
   }

@@ -67,9 +67,6 @@ interface IFluentProviderConstructionMethods<T, R extends { __type: any; __arg: 
   /** Bind to resolve another service (transformer API - type gets converted to Symbol.for("U")) */
   to<U>(): Apply<R & { __arg: U }, U>;
   
-  /** Bind to self-resolving class (requires transformer) */
-  toSelf<C extends Constructor>(ctor: C): Apply<R & { __arg: InstanceType<C> }, InstanceType<C>>;
-  
   /** Bind to a constant value */
   toConst<U = T>(value: U): Apply<R & { __arg: U }, U>;
   
