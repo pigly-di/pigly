@@ -28,7 +28,6 @@ let foo = kernel.get<IFoo>();
 
 ## Planned features
 
-* Scoping
 * Better inferring of constructors
 
 ## Native Usage
@@ -57,26 +56,26 @@ kernel.bind(A, _=>{ return "hello world" })
 
 ### .get(symbol)
 
-resolve all the bindings for a symbol and return the first one
+Resolves all bindings for a symbol and returns the result of the first binding to resolve. The **latest** binding registered for a symbol is resolved first — subsequent bindings act as fallbacks.
 
 ```ts
 const A = Symbol.for("A")
 
 kernel.bind(A, _=> "hello");
-kernel.bind(A, _=> " world");
+kernel.bind(A, _=> "world");
 
-let result = kernel.get(A); // "hello";
+let result = kernel.get(A); // "world" — latest binding wins
 ```
 
 ### .getAll(symbol)
 
-resolve all the bindings for a symbol and return all of the results. 
+Resolves all bindings for a symbol and returns all results. Results are ordered latest-binding-first.
 
 ```ts
 const A = Symbol.for("A")
 
+kernel.bind(A, _=> "world");
 kernel.bind(A, _=> "hello");
-kernel.bind(A, _=> " world");
 
 let results = kernel.getAll(A); // ["hello", " world"];
 ```
@@ -101,13 +100,13 @@ used to resolve a symbol to all its bindings
 
 ```ts
 const A = Symbol.for("A")
-const B = Symbol.for("A");
+const B = Symbol.for("B");
 
 kernel.bind(A, _ => "hello");
 kernel.bind(A, _ => "world");
 kernel.bind(B, toAll(A));
 
-kernel.get(B); // ["hello", "world"]
+kernel.get(B); // ["world", "hello"] — latest binding first
 
 ```
 
@@ -135,16 +134,18 @@ a more explicit way to provide a constant
 kernel.bind(B, toConst("hello world"));
 ```
 
-### asSingleton(provider)
+### Scope.Singleton
 
-used to cache the output of the given provider so that subsequent requests will return the same result. 
+Pass `Scope.Singleton` as the third argument to `bind` to cache the result of a provider so that subsequent requests return the same instance.
 
 ```ts
 const A = Symbol.for("A");
-const B = Symbol.for("B");
 
-kernel.bind(A, toClass(Foo));
-kernel.bind(B, asSingleton(to(A)));
+kernel.bind(A, toClass(Foo), Scope.Singleton);
+
+let foo1 = kernel.get(A);
+let foo2 = kernel.get(A);
+// foo1 === foo2
 ```
 
 ### when(predicate, provider)
@@ -156,26 +157,26 @@ const A = Symbol.for("A");
 const B = Symbol.for("B");
 const C = Symbol.for("C");
 
-kernel.bind(A, toClass(Foo, to(C) ));
-kernel.bind(B, toClass(Foo, to(C) ));
+kernel.bind(A, toClass(Foo, to(C)));
+kernel.bind(B, toClass(Foo, to(C)));
 
-kernel.bind(C, when(x=>x.parent.target == A, toConst("a")));
-kernel.bind(C, when(x=>x.parent.target == B, toConst("b")));
+kernel.bind(C, when(x => x.parent.service == A, toConst("a")));
+kernel.bind(C, when(x => x.parent.service == B, toConst("b")));
 ```
 
 ## Predicates
 
 ### injectedInto(symbol)
 
-returns true if `ctx.parent.target == symbol`
+returns true if `ctx.parent.service == symbol`
 
 ```ts
 const A = Symbol.for("A");
 const B = Symbol.for("B");
 const C = Symbol.for("C");
 
-kernel.bind(A, toClass(Foo, to(C) ));
-kernel.bind(B, toClass(Foo, to(C) ));
+kernel.bind(A, toClass(Foo, to(C)));
+kernel.bind(B, toClass(Foo, to(C)));
 
 kernel.bind(C, when(injectedInto(A), toConst("a")));
 kernel.bind(C, when(injectedInto(B), toConst("b")));
@@ -183,15 +184,17 @@ kernel.bind(C, when(injectedInto(B), toConst("b")));
 
 ### hasAncestor(symbol)
 
-returns true if an request ancestor is equal to the symbol. 
+returns true if a request ancestor matches the symbol.
+
+Bind the default (fallback) provider first so that conditional overrides — bound afterwards — take priority.
 
 ```ts
   const A = Symbol.for("A");
   const B = Symbol.for("B");
   const C = Symbol.for("C");
 
-  kernel.bind(A, when(hasAncestor(C), toConst("foo")));
-  kernel.bind(A, toConst("bar")));  
+  kernel.bind(A, toConst("bar"));                      // fallback — bound first
+  kernel.bind(A, when(hasAncestor(C), toConst("foo"))); // override — bound last, resolved first
   kernel.bind(B, to(A));
   kernel.bind(C, to(B));
 
@@ -226,8 +229,7 @@ let kernel = new Kernel();
 kernel.bind(toSelf(Foo));
 
 kernel.bind<string>(
-  when(injectedInto<Foo>(
-    toConst("joe")));
+  when(injectedInto<Foo>(), toConst("joe")));
 
 kernel.bind<IFoo>(to<Foo>());
 

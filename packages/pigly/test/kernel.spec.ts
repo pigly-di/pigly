@@ -64,7 +64,7 @@ describe("Kernel Basics", () => {
 
     let result = kernel.get<number>($IFoo);
 
-    expect(result, "result is 10").to.eql(10);
+    expect(result, "result is 11 (latest binding)").to.eql(11);
   })
 
   it("can multi-bind and resolve all ", () => {
@@ -81,7 +81,7 @@ describe("Kernel Basics", () => {
       result.push(item);
     }
 
-    expect(result, "result is 10").to.eql([10, 11]);
+    expect(result, "latest binding first").to.eql([11, 10]);
   })
 
   it("should ignore providers returning undefined", () => {
@@ -264,7 +264,7 @@ describe("Providers", () => {
 
     let foo = kernel.getAll<IFoo>($IFoo);
 
-    expect(foo, "result is array").is.eql([1, 2, 3])
+    expect(foo, "result is array, latest binding first").is.eql([3, 2, 1])
   })
 })
 
@@ -394,8 +394,8 @@ describe("Predicates", () => {
       const B = Symbol.for("B");
       const C = Symbol.for("C");
 
-      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
       kernel.bind(A, toConst("bar"));
+      kernel.bind(A, when(hasAncestor(C), toConst("foo")));
       kernel.bind(B, to(A));
       kernel.bind(C, to(B));
 

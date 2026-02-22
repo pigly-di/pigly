@@ -28,7 +28,7 @@ describe("toSelf", () => {
 
     let a = kernel.get<A>();
 
-    expect(a.b).to.be.eql([{ message: "hello" }, { message: "world" }]);
+    expect(a.b).to.be.eql([{ message: "world" }, { message: "hello" }]);
   })
   it("can infer constructor multiple arguments and inject", () => {
     const kernel = new Kernel();

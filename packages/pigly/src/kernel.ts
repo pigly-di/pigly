@@ -49,7 +49,7 @@ export class Kernel implements IKernel {
 
     let binding = { provider, site, scope };
 
-    bindings.push(binding);
+    bindings.unshift(binding);
 
     this._bindings.set(service, bindings);
 
@@ -164,10 +164,10 @@ function reportCyclicError(request: IRequest) {
 
   let msg = "Pigly Cyclic Dependency Found \n";
 
-  msg += "  Requested: " + request.service.toString() + (request.target?`(${request.target})`: "") + "\n";
+  msg += "  Requested: " + request.service.toString() + (request.target ? `(${request.target})` : "") + "\n";
 
   for (let ctx of history) {
-    msg += "  Into: " + ctx.service.toString() + (ctx.target?`(${ctx.target})`: "") + "\n";
+    msg += "  Into: " + ctx.service.toString() + (ctx.target ? `(${ctx.target})` : "") + "\n";
     msg += "    Config: " + ctx.binding.site + "\n";
   }
 
