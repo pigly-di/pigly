@@ -30,7 +30,7 @@
     "build": "npm run build:cjs",
     "build:cjs": "tsc --build tsconfig.build.cjs.json",
     "build:pack": "node ./gen-package.mjs",
-    "test": "cross-env TS_NODE_COMPILER=ts-patch/compiler nyc mocha test/**/*.spec.ts",
+    "test": "cross-env NODE_OPTIONS=--no-experimental-strip-types TS_NODE_COMPILER=ts-patch/compiler nyc mocha test/**/*.spec.ts",
     "example": "ts-node --compiler ts-patch/compiler example.ts",
     "coverage": "codecov --flags transformer"
   },

@@ -5,7 +5,13 @@ import { IRequest } from "../_request";
 
 let __setImmediate;
 
-if (global && global.setImmediate) {
+if (typeof process !== 'undefined' && process.nextTick) {
+  __setImmediate = process.nextTick;
+} else if (typeof queueMicrotask !== 'undefined') {
+  __setImmediate = function (cb, ...args) {
+    return queueMicrotask(() => cb(...args));
+  };
+} else if (global && global.setImmediate) {
   __setImmediate = global.setImmediate;
 } else {
   __setImmediate = function (cb, ...args) {
@@ -19,7 +25,9 @@ export type DeferFieldProviders<T> = {
 
 /** 
  * 
- * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies */
+ * NOT RECOMMENDED: still possible to stack-overflow on non-singleton cyclic dependencies 
+ * NOTE: you need to await to the next tick before accessing deferred injected properties. 
+ * */
 export function defer<T>(provider: IProvider<T>, inject: DeferFieldProviders<T>) {
   return (ctx: IContext) => {
     let kernel = ctx.kernel;
