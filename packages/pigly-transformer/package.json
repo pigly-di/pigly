@@ -1,6 +1,6 @@
 {
   "name": "@pigly/transformer",
-  "version": "2.0.0-alpha.9",
+  "version": "2.0.0",
   "main": "./dist/cjs/index.js",
   "typings": "./dist/cjs/index.d.ts",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "cross-env": "^7.0.0",
     "mocha": "^10",
     "nyc": "^15.1.0",
-    "pigly": "^2.0.0-alpha.8",
+    "pigly": "^2.0.0",
     "source-map-support": "^0.5.19",
     "ts-patch": "^3.0.1",
     "typescript": "^5.2.2"
@@ -71,5 +71,5 @@
     "typescript",
     "plugin"
   ],
-  "gitHead": "e2d738ed0497a0e92c74cb5b609b08c187f2b6be"
+  "gitHead": "37e1ca9c9dc780c9f4d9881091c28a0987054117"
 }
