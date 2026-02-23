@@ -22,9 +22,10 @@ describe("toSelf", () => {
     class A { constructor(public b: B[]) { } }
     interface B { message: string }
 
-    kernel.bind(toSelf(A));
+    kernel.bind(toSelf(A));  
     kernel.bind<B>(toConst({ message: "hello" }));
     kernel.bind<B>(toConst({ message: "world" }));
+
 
     let a = kernel.get<A>();
 

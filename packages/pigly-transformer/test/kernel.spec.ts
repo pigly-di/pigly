@@ -116,6 +116,24 @@ describe("kernel", () => {
     expect(a.b).to.be.eq("moo");
   })
 
+  it("can bind with type inferred (no explicit type argument) — regression for TypeMapKind.Array/Deferred in TypeScript 5.9", () => {
+    // TypeScript 5.9 added TypeMapKind.Deferred (=2), shifting Function/Composite/Merged up by one.
+    // It also uses Array mapper in more cases than before. Both required fixes in the internal
+    // typeMapper helper. This test exercises inferTypeArguments() via a bind call without an
+    // explicit <T>, which forces the transformer to resolve T through the mapper.
+    const kernel = new Kernel();
+
+    class A { constructor(public b: B) {} }
+    interface B { message: string }
+
+    kernel.bind(toSelf(A));        // T inferred from toSelf's return type — exercises typeMapper
+    kernel.bind<B>(toConst({ message: "world" }));
+
+    let a = kernel.get<A>();
+
+    expect(a.b.message).to.be.eq("world");
+  })
+
     // it("can be derived", () => {
     //   class MyKernel extends Kernel {
     //     bind<T>(...args: any[]): IBinding {

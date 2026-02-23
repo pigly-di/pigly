@@ -70,7 +70,11 @@ function createTypeSymbolFromCallExpressionTypeArguments(node: ts.CallExpression
     let typeArgument = inferTypeArguments(node, typeChecker);
 
     if (typeArgument && typeArgument[0]) {
-      typeSymbol = createSymbolFor(typeArgument[0].symbol.escapedName.toString());
+      const t = typeArgument[0];
+      const name = t.symbol
+        ? t.symbol.escapedName.toString()
+        : typeChecker.typeToString(t).replace(/\s/g, '');
+      typeSymbol = createSymbolFor(name);
     }
 
     /*if (ts.isTypeReferenceNode(typeArgument)) {
@@ -249,55 +253,12 @@ function createProvider(symbol: ts.CallExpression, isArray: boolean, name?: stri
 }
 
 //https://stackoverflow.com/questions/48886508/typechecker-api-how-do-i-find-inferred-type-arguments-to-a-function
-
-/* @internal */
-const enum TypeMapKind {
-  Simple,
-  Array,
-  Function,
-  Composite,
-  Merged,
-}
-
-/* @internal */
-type TypeMapper =
-  | { kind: TypeMapKind.Simple, source: ts.Type, target: ts.Type }
-  | { kind: TypeMapKind.Array, sources: readonly ts.Type[], targets: readonly ts.Type[] | undefined }
-  | { kind: TypeMapKind.Function, func: (t: ts.Type) => ts.Type }
-  | { kind: TypeMapKind.Composite | TypeMapKind.Merged, mapper1: TypeMapper, mapper2: TypeMapper };
-
-
-function typeMapper(mapper: TypeMapper, source: ts.Type): ts.Type {
-
-  switch (mapper.kind) {
-    case TypeMapKind.Simple:
-      return mapper.target;
-    case TypeMapKind.Array:
-      throw Error("not implemented");
-    case TypeMapKind.Function:
-      return mapper.func(source);
-    case TypeMapKind.Composite:
-    case TypeMapKind.Merged:
-      return typeMapper(mapper.mapper2, source);
-  }
-}
-
+// TypeScript 5.8+ exposes typeChecker.getTypeArgumentsForResolvedSignature() publicly (PR #60201),
+// which replaces the need to walk the internal TypeMapper graph.
 function inferTypeArguments(node: ts.CallExpression, typeChecker: ts.TypeChecker): ts.Type[] {
-  const signature: ts.Signature = typeChecker.getResolvedSignature(node);
-  const targetParams: ts.TypeParameter[] = signature['target'] && signature['target'].typeParameters;
-
-  if (!targetParams) {
-    return [];
-  }
-
-  if (signature['mapper'] == undefined)
-    return targetParams;
-
-  //typescript <= 3.8
-  if (typeof signature['mapper'] == "function")
-    return targetParams.map(p => signature['mapper'](p));
-  //typescript >= 3.9.... 
-  return targetParams.map(p => typeMapper(signature['mapper'] as TypeMapper, p));
+  const signature = typeChecker.getResolvedSignature(node);
+  if (!signature) return [];
+  return typeChecker.getTypeArgumentsForResolvedSignature(signature) as any ?? [];
 }
 
 //need to ensure imports still work for toClass<T>() - 

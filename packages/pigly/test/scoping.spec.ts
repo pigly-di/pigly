@@ -1,7 +1,6 @@
 import { Kernel, toConst, toClass, toFunc, to,  IContext, when, defer, hasAncestor, IProvider, IBinding } from "../src";
 import { expect } from 'chai';
 import { Scope } from '../src/_scope';
-import { nextTick } from 'process';
 
 function scope<T>(provider: IProvider<T>): IProvider<T> {
   return function (ctx: IContext) {
@@ -10,7 +9,7 @@ function scope<T>(provider: IProvider<T>): IProvider<T> {
 }
 
 describe("Kernel Scoping", () => {
-  it("can bind to scope and instances within scope are same", (done) => {
+  it("can bind to scope and instances within scope are same", () => {
     const kernel = new Kernel();
 
     const $Request = Symbol.for("Req");
@@ -55,21 +54,18 @@ describe("Kernel Scoping", () => {
     let req1 = kernel.get<Req>($Request);
     let req2 = kernel.get<Req>($Request);
 
-    setImmediate(() => {
-      //requests are different... 
-      expect(req1).not.eq(req2);
-      //a and b instances are different... 
-      expect(req1.a).not.eq(req2.a);
-      expect(req1.b).not.eq(req2.b);
-      // x between requests is different...
-      expect(req1.a.x).not.eq(req2.a.x);
-      expect(req1.b.x).not.eq(req2.b.x);
-      // x within requests is same...
-      expect(req1.a.x).eq(req1.b.x);
-      expect(req2.a.x).eq(req2.b.x);
-      //deferred cyclic injection is same
-      expect(req1).eq(req1.a.x.req);
-      done();
-    });
+    //requests are different... 
+    expect(req1).not.eq(req2);
+    //a and b instances are different... 
+    expect(req1.a).not.eq(req2.a);
+    expect(req1.b).not.eq(req2.b);
+    // x between requests is different...
+    expect(req1.a.x).not.eq(req2.a.x);
+    expect(req1.b.x).not.eq(req2.b.x);
+    // x within requests is same...
+    expect(req1.a.x).eq(req1.b.x);
+    expect(req2.a.x).eq(req2.b.x);
+    //deferred cyclic injection is same
+    expect(req1).eq(req1.a.x.req);
   })
 });

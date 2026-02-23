@@ -18,6 +18,7 @@ function getCallSite(stack: string): string {
 
 export class Kernel implements IKernel {
   private _bindings = new Map<symbol, IBinding[]>();
+  private _postResolveQueue: Array<() => void> = [];
 
   constructor(private opts = { verbose: false }) {
 
@@ -88,6 +89,7 @@ export class Kernel implements IKernel {
           service: request.service,
           binding: binding,
           resolve: null,
+          finally: (cb) => { this._postResolveQueue.push(cb); },
           createContext: function (_ctx: Partial<IContext>) {
             let result = Object.assign({}, ctx, _ctx, { parent: ctx });
             result.resolve = resolve.bind(result);
@@ -110,6 +112,11 @@ export class Kernel implements IKernel {
           if (resolved !== undefined) {
             wasResolved = true;
             cache.set(binding, resolved);
+
+            if (request.parent == undefined) {
+              this._drainPostResolve();
+            }
+
             yield resolved;
           }
         }
@@ -151,6 +158,12 @@ export class Kernel implements IKernel {
   getAll<T>(service?: Service): any | Array<any> {
     if (isService(service) == false) throw Error('called "get" without a service');
     return this.resolve<T>({ service }).toArray();
+  }
+
+  private _drainPostResolve() {
+    while (this._postResolveQueue.length) {
+      this._postResolveQueue.shift()();
+    }
   }
 }
 

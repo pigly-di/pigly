@@ -18,8 +18,8 @@ export interface IContext extends IResolverRoot {
   parent?: IContext;
   /** the binding chosen */
   binding: IBinding;
-  /** post-constructor clean-up - called after root request instantiated */
-  finally?: (instance: any) => void;
+  /** register a callback to run after the resolved instance is cached */
+  finally(cb: () => void): void;
   /** creates a child context - typically for sub-field resolution */
   createContext(ctx?: Partial<IContext>): IContext;
 }

@@ -15,7 +15,7 @@
   "devDependencies": {
     "@types/chai": "^4.2.16",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^18.0.0",
+    "@types/node": "^22.19.11",
     "chai": "^4.3.4",
     "codecov": "^3.8.1",
     "cross-env": "^7.0.0",
@@ -23,8 +23,8 @@
     "nyc": "^15.1.0",
     "pigly": "^2.0.0",
     "source-map-support": "^0.5.19",
-    "ts-patch": "^3.0.1",
-    "typescript": "^5.2.2"
+    "ts-patch": "^3.3.0",
+    "typescript": "^5.9.3"
   },
   "scripts": {
     "build": "npm run build:cjs",
@@ -55,7 +55,7 @@
     "instrument": true
   },
   "peerDependencies": {
-    "typescript": ">=5.0.0"
+    "typescript": ">=5.9.3"
   },
   "files": [
     "/dist/*",

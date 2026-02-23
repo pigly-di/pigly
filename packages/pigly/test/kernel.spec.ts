@@ -315,7 +315,7 @@ describe("Conditional", () => {
 })
 
 describe("Deferred Injection", () => {
-  it("can inject singleton cyclic-loop dependency", (done) => {
+  it("can inject singleton cyclic-loop dependency", () => {
     const kernel = new Kernel();
 
     class Foo {
@@ -336,16 +336,13 @@ describe("Deferred Injection", () => {
     let foo = kernel.get<Foo>($Foo);
     let bar = kernel.get<Bar>($Bar);
 
-    setImmediate(() => {
-      expect(foo.bar).is.instanceOf(Bar);
-      expect(bar.foo).is.instanceOf(Foo);
-      expect(foo.bar).is.equal(bar);
-      expect(bar.foo).is.equal(foo);
-      done();
-    });
+    expect(foo.bar).is.instanceOf(Bar);
+    expect(bar.foo).is.instanceOf(Foo);
+    expect(foo.bar).is.equal(bar);
+    expect(bar.foo).is.equal(foo);
   })
 
-  it("can predicate provider with target name", (done) => {
+  it("can predicate provider with target name", () => {
     const kernel = new Kernel();
 
     class Foo {
@@ -362,10 +359,7 @@ describe("Deferred Injection", () => {
     kernel.bind(B, defer(toClass(Foo, name("bar", to(A))), { foo: to(A) }))
 
     let resultA = kernel.get<Foo>(B);
-    setImmediate(() => {
-      expect(resultA.foo).is.eq("FOO");
-      done();
-    })
+    expect(resultA.foo).is.eq("FOO");
   })
 })
 

@@ -10,7 +10,7 @@ interface IBar {
 }
 
 describe("Triage", () => {
-  it("deferred injection fires before a follow-on promise resolves", async () => {
+  it("deferred injection is available synchronously after get()", () => {
     const kernel = new Kernel();
     const $IFoo = Symbol.for("IFoo:triarge");
     const $IBar = Symbol.for("IBar:triarge");
@@ -20,16 +20,22 @@ describe("Triage", () => {
 
     const foo = kernel.get<IFoo>($IFoo);
 
-    // defer schedules via process.nextTick — bar is not yet assigned synchronously
-    // not ideal really - this should be defined here too - but for now this is a ok work around. 
-    expect(foo.bar, "bar is not yet injected synchronously").to.be.undefined;
-
-    // process.nextTick drains before Promise microtasks, so by the time
-    // this await resumes, the deferred injection has already occurred
-    await Promise.resolve();
-
-    expect(foo.bar, "bar was injected before promise continuation ran").to.not.be.undefined;
+    // postResolve runs synchronously — bar is injected immediately
+    expect(foo.bar, "bar was injected synchronously").to.not.be.undefined;
     expect(foo.bar!.value, "injected value is correct").to.equal(42);
+  });
+
+  it("error thrown during defer resolution propagates synchronously", () => {
+    const kernel = new Kernel();
+    const $IFoo = Symbol.for("IFoo:triarge-error");
+
+    const injectionError = new Error("defer injection failed");
+
+    kernel.bind($IFoo, defer(() => ({} as IFoo), {
+      bar: () => { throw injectionError; }
+    }));
+
+    expect(() => kernel.get<IFoo>($IFoo)).to.throw("defer injection failed");
   });
 });
 
