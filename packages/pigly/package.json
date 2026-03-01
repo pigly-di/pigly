@@ -20,7 +20,7 @@
     "codecov": "^3.8.1",
     "cross-env": "^7.0.3",
     "mocha": "^8.3.2",
-    "nyc": "^15.1.0",
+    "nyc": "^18.0.0",
     "source-map-support": "^0.5.19",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
