@@ -18,7 +18,7 @@
     "@types/node": "^22.19.11",
     "chai": "^4.3.4",
     "codecov": "^3.8.1",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.1.0",
     "mocha": "^8.3.2",
     "nyc": "^15.1.0",
     "source-map-support": "^0.5.19",
