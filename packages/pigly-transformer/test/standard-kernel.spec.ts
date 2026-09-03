@@ -53,7 +53,7 @@ describe("StandardKernel with Transformer", () => {
       const kernel = new StandardKernel();
 
       kernel.bind<string>().toConst("test");
-      kernel.bind<number>().toConst(42);
+      kernel.bind<number>().toConst(42).when(ctx => ctx.target === "special");
 
       expect(kernel.get<string>()).to.equal("test");
       expect(kernel.get<number>()).to.equal(42);
